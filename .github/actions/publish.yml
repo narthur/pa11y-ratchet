@@ -1,0 +1,26 @@
+name: Publish
+on:
+  push:
+    branches:
+      - main
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - run: pnpm install
+      - run: pnpm run build
+      - env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VER=$(node -p "require('./package.json').version")
+          VER_SHORT=$(echo $VER | cut -d. -f1)
+          gh release create v$VER dist/* --generate-notes
+          gh release delete v$VER_SHORT --yes --cleanup-tag || true
+          gh release create v$VER_SHORT dist/* --generate-notes

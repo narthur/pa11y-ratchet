@@ -1,0 +1,18 @@
+name: "Pa11y Ratchet"
+description: "Fail if Pa11y detects newly-introduced accessibility issues"
+inputs:
+  url:
+    description: "The sitemap URL to test"
+    required: true
+  find:
+    description: "The URL substring to search for in sitemap URLs"
+    required: false
+  replace:
+    description: "The replacement string for the find string"
+    required: false
+outputs:
+  pa11y-output:
+    description: "The Pa11y output"
+runs:
+  using: "node20"
+  main: "dist/index.js"

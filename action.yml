@@ -1,7 +1,7 @@
 name: "Pa11y Ratchet"
 description: "Fail if Pa11y detects newly-introduced accessibility issues"
 inputs:
-  url:
+  sitemap-url:
     description: "The sitemap URL to test"
     required: true
   find:
@@ -9,6 +9,9 @@ inputs:
     required: false
   replace:
     description: "The replacement string for the find string"
+    required: false
+  include:
+    description: "Only include URLs that match this regular expression"
     required: false
 outputs:
   pa11y-output:

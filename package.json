@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest",
-    "build": "rimraf ./dist && ncc build src/index.ts && cp ./action.yml ./dist/action.yml"
+    "build": "rimraf ./dist && ncc build src/index.ts --source-map && cp ./action.yml ./dist/action.yml"
   },
   "keywords": [],
   "author": "",

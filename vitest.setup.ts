@@ -16,7 +16,14 @@ vi.mock("@actions/github", () => ({
         repo: "repo",
       },
       eventName: "push",
-      sha: "sha",
+      sha: "the_event_sha",
+      payload: {
+        pull_request: {
+          base: {
+            sha: "the_base_sha",
+          },
+        },
+      },
     },
   },
 }));

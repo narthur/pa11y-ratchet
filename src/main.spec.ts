@@ -1,14 +1,25 @@
 import main from "./main.js";
 import { describe, it, beforeEach, vi, expect } from "vitest";
-import core from "@actions/core";
 import getUrls from "./lib/getUrls.js";
 import pa11y from "pa11y";
 import getInputs from "./lib/getInputs.js";
+import { DefaultArtifactClient } from "@actions/artifact";
 
 describe("main", () => {
   beforeEach(() => {
-    vi.mocked(core.getInput).mockImplementation((key: string) => {
-      return `the_${key}`;
+    vi.mocked(DefaultArtifactClient.prototype.listArtifacts).mockResolvedValue({
+      artifacts: [
+        {
+          name: "pa11y-ratchet-the_base_sha",
+          id: 3,
+          size: 0,
+        },
+        {
+          name: "pa11y-ratchet-another_sha",
+          id: 5,
+          size: 0,
+        },
+      ],
     });
   });
 
@@ -32,10 +43,6 @@ describe("main", () => {
   });
 
   it("does not filter by include if no include provided", async () => {
-    vi.mocked(core.getInput).mockImplementation((key: string) => {
-      return key === "include" ? "" : `the_${key}`;
-    });
-
     await main();
 
     expect(pa11y).toBeCalledTimes(2);
@@ -47,5 +54,17 @@ describe("main", () => {
     await main();
 
     expect(pa11y).toBeCalledWith(expect.stringContaining("the_replace"));
+  });
+
+  it("lists artifacts", async () => {
+    await main();
+
+    expect(DefaultArtifactClient.prototype.listArtifacts).toBeCalled();
+  });
+
+  it("downloads base sha artifact", async () => {
+    await main();
+
+    expect(DefaultArtifactClient.prototype.downloadArtifact).toBeCalledWith(3);
   });
 });

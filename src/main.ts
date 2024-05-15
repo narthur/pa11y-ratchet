@@ -8,6 +8,7 @@ import getInputs from "./lib/getInputs.js";
 export default async function main() {
   const artifact = new DefaultArtifactClient();
   const sha = github.context.sha;
+  const baseSha = github.context.payload.pull_request?.base.sha;
   const inputs = getInputs();
   const includeRegex = new RegExp(inputs.include);
 
@@ -28,5 +29,15 @@ export default async function main() {
   }
 
   await writeCsv(outpath, issues);
-  await artifact.uploadArtifact(sha, [outpath], "/");
+  await artifact.uploadArtifact(`pa11y-ratchet-${sha}`, [outpath], "/");
+
+  const result = await artifact.listArtifacts();
+
+  const baseArtifact = result.artifacts.find((artifact) =>
+    artifact.name.includes(baseSha)
+  );
+
+  if (baseArtifact) {
+    await artifact.downloadArtifact(baseArtifact.id);
+  }
 }

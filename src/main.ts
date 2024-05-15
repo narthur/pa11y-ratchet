@@ -4,6 +4,8 @@ import writeCsv from "./lib/writeCsv.js";
 import { DefaultArtifactClient } from "@actions/artifact";
 import github from "@actions/github";
 import getInputs from "./lib/getInputs.js";
+import commentIssues from "./lib/commentIssues.js";
+import compareIssues from "./lib/compareIssues.js";
 
 export default async function main() {
   const artifact = new DefaultArtifactClient();
@@ -39,5 +41,10 @@ export default async function main() {
 
   if (baseArtifact) {
     await artifact.downloadArtifact(baseArtifact.id, { path: "/tmp" });
+
+    console.log("Comparing issues and commenting on PR");
+    await commentIssues(
+      await compareIssues(`/tmp/pa11y-ratchet-${baseSha}`, outpath)
+    );
   }
 }

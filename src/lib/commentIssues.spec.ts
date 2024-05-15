@@ -1,0 +1,15 @@
+import { describe, it, expect, vi } from "vitest";
+import commentIssues from "./commentIssues.js";
+import octokit from "../services/octokit.js";
+
+describe("commentIssues", () => {
+  it("creates comment", async () => {
+    await commentIssues({
+      new: [{ context: "new" }],
+      fixed: [{ context: "fixed" }],
+      retained: [{ context: "retained" }],
+    });
+
+    expect(octokit.rest.issues.createComment).toHaveBeenCalled();
+  });
+});

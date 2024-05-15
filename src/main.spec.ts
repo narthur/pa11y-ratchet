@@ -65,6 +65,9 @@ describe("main", () => {
   it("downloads base sha artifact", async () => {
     await main();
 
-    expect(DefaultArtifactClient.prototype.downloadArtifact).toBeCalledWith(3);
+    expect(DefaultArtifactClient.prototype.downloadArtifact).toBeCalledWith(
+      3,
+      expect.anything()
+    );
   });
 });

@@ -38,6 +38,6 @@ export default async function main() {
   );
 
   if (baseArtifact) {
-    await artifact.downloadArtifact(baseArtifact.id);
+    await artifact.downloadArtifact(baseArtifact.id, { path: "/tmp" });
   }
 }

@@ -19,12 +19,22 @@ vi.mock("@actions/github", () => ({
       sha: "the_event_sha",
       payload: {
         pull_request: {
+          number: 1,
           base: {
             sha: "the_base_sha",
           },
         },
       },
     },
+    getOctokit: vi.fn(() => ({
+      rest: {
+        issues: {
+          listComments: vi.fn(() => Promise.resolve({ data: [] })),
+          updateComment: vi.fn(),
+          createComment: vi.fn(),
+        },
+      },
+    })),
   },
 }));
 
@@ -41,6 +51,7 @@ vi.mock("./src/lib/getUrls.js", () => ({
   default: vi.fn(() => Promise.resolve(["url1", "url2"])),
 }));
 
+vi.mock("./src/lib/readCsv.js");
 vi.mock("./src/lib/writeCsv.js");
 
 vi.mock("fast-csv", () => ({

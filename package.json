@@ -1,12 +1,12 @@
 {
   "name": "pa11y-ratchet",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "test": "vitest",
-    "build": "rimraf ./dist && ncc build src/index.ts --source-map && cp ./action.yml ./dist/action.yml"
+    "build": "rimraf ./dist && node ./build.mjs && cp ./action.yml ./dist/action.yml"
   },
   "keywords": [],
   "author": "",
@@ -16,10 +16,9 @@
     "@types/node": "^20.12.12",
     "@types/pa11y": "^5.3.7",
     "@types/xml2js": "^0.4.14",
-    "@vercel/ncc": "^0.38.1",
+    "esbuild": "^0.21.3",
     "eslint": "^9.2.0",
     "globals": "^15.2.0",
-    "ncc": "^0.3.6",
     "rimraf": "^5.0.7",
     "typescript": "^5.4.5",
     "typescript-eslint": "^7.9.0",

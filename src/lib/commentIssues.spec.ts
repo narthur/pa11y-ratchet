@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import commentIssues from "./commentIssues.js";
 import octokit from "../services/octokit.js";
 

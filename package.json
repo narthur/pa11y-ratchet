@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest",
-    "build": "rimraf ./dist && node ./build.mjs && cp ./action.yml ./dist/action.yml"
+    "build": "rimraf ./dist && tsc -p tsconfig.build.json"
   },
   "keywords": [],
   "author": "",

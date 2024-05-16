@@ -31,7 +31,9 @@ export default async function main() {
   }
 
   await writeCsv(outpath, issues);
-  await artifact.uploadArtifact(`pa11y-ratchet-${sha}`, [outpath], "/");
+
+  // @ts-expect-error - the types are wrong for this method as of 2024-05-16
+  await artifact.uploadArtifact(`pa11y-ratchet-${sha}`, [outpath]);
 
   const result = await artifact.listArtifacts();
 

@@ -5,6 +5,8 @@ export default async function writeCsv(
   outpath: string,
   rows: Record<string, unknown>[]
 ) {
+  console.log(`Writing CSV to ${outpath}`);
+
   if (existsSync(outpath)) {
     unlinkSync(outpath);
   }
@@ -19,4 +21,6 @@ export default async function writeCsv(
   }
 
   csvStream.end();
+
+  console.log(`CSV written to ${outpath}`);
 }

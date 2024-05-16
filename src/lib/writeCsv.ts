@@ -17,4 +17,6 @@ export default async function writeCsv(
   for (const row of rows) {
     csvStream.write(row);
   }
+
+  csvStream.end();
 }

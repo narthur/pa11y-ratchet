@@ -4,6 +4,9 @@ inputs:
   sitemap-url:
     description: "The sitemap URL to test"
     required: true
+  github-token:
+    description: "The GitHub token for the repository"
+    required: true
   find:
     description: "The URL substring to search for in sitemap URLs"
     required: false

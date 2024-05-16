@@ -8,5 +8,5 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "exclude": ["dist", "./index.js"]
+  "exclude": ["dist", "./index.js", "node_modules"]
 }

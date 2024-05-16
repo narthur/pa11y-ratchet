@@ -13,3 +13,6 @@ jobs:
       - run: pnpm install
       - run: pnpm run build
       - uses: ./
+        with:
+          sitemap-url: https://pinepeakdigital.com/sitemap.xml
+          github-token: ${{ secrets.GITHUB_TOKEN }}

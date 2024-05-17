@@ -36,6 +36,8 @@ export default async function main() {
 
   const result = await artifact.listArtifacts();
 
+  console.log(result.artifacts);
+
   const baseArtifact = result.artifacts.find((artifact) =>
     artifact.name.includes(baseSha)
   );

@@ -43,10 +43,10 @@ export default async function main() {
     return;
   }
 
-  await artifact.downloadArtifact(baseArtifact.id, { path: "/" });
+  await artifact.downloadArtifact(baseArtifact.id, { path: "/tmp" });
 
   console.log("Comparing issues and commenting on PR");
   await commentIssues(
-    await compareIssues(`/pa11y-ratchet-${baseSha}`, outpath)
+    await compareIssues(`/tmp/pa11y-ratchet-${baseSha}`, outpath)
   );
 }

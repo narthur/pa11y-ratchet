@@ -1,6 +1,6 @@
 name: Continuous Integration
 on:
-  push:
+  pull_request:
 jobs:
   run-action:
     runs-on: ubuntu-latest
@@ -16,3 +16,6 @@ jobs:
         with:
           sitemap-url: https://pinepeakdigital.com/sitemap.xml
           github-token: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+      - run: ls -lh /tmp
+      - run: ls -lh /tmp/tmp

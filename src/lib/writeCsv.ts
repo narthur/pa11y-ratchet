@@ -22,11 +22,23 @@ export default async function writeCsv(
     csvStream.write(row);
   }
 
-  csvStream.end();
+  return new Promise((resolve, reject) => {
+    writeStream.on("error", reject);
+    writeStream.on("finish", () => {
+      console.log(`CSV written to ${outpath}`);
+      const content = readFileSync(outpath, "utf8");
+      console.log("CSV content:");
+      console.log(content);
+      resolve(undefined);
+    });
+    csvStream.end();
+  });
 
-  console.log(`CSV written to ${outpath}`);
+  // csvStream.end();
 
-  const content = readFileSync(outpath, "utf8");
-  console.log("CSV content:");
-  console.log(content);
+  // console.log(`CSV written to ${outpath}`);
+
+  // const content = readFileSync(outpath, "utf8");
+  // console.log("CSV content:");
+  // console.log(content);
 }

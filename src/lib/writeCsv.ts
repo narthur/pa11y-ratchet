@@ -6,6 +6,7 @@ export default async function writeCsv(
   rows: Record<string, unknown>[]
 ) {
   console.log(`Writing CSV to ${outpath}`);
+  console.log("Number of rows:", rows.length);
 
   if (existsSync(outpath)) {
     unlinkSync(outpath);

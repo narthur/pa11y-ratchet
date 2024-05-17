@@ -1,13 +1,11 @@
 import * as csv from "fast-csv";
-import { createWriteStream, unlinkSync, existsSync, readFileSync } from "fs";
+import { createWriteStream, unlinkSync, existsSync } from "fs";
 
 export default async function writeCsv(
   outpath: string,
   rows: Record<string, unknown>[]
 ) {
   console.log(`Writing CSV to ${outpath}`);
-  console.log("Number of rows:", rows.length);
-  console.dir(rows, { depth: null });
 
   if (existsSync(outpath)) {
     unlinkSync(outpath);
@@ -26,19 +24,8 @@ export default async function writeCsv(
     writeStream.on("error", reject);
     writeStream.on("finish", () => {
       console.log(`CSV written to ${outpath}`);
-      const content = readFileSync(outpath, "utf8");
-      console.log("CSV content:");
-      console.log(content);
       resolve(undefined);
     });
     csvStream.end();
   });
-
-  // csvStream.end();
-
-  // console.log(`CSV written to ${outpath}`);
-
-  // const content = readFileSync(outpath, "utf8");
-  // console.log("CSV content:");
-  // console.log(content);
 }

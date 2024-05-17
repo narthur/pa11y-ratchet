@@ -13,6 +13,7 @@ export default async function main() {
   const baseSha = github.context.payload.pull_request?.base.sha;
   const inputs = getInputs();
   const includeRegex = new RegExp(inputs.include);
+  console.log(github.context);
 
   const outpath = "/tmp/pa11y.csv";
 

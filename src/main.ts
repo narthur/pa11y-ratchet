@@ -14,7 +14,7 @@ export default async function main() {
   const inputs = getInputs();
   const includeRegex = new RegExp(inputs.include);
 
-  const outpath = "/pa11y.csv";
+  const outpath = "/tmp/pa11y.csv";
 
   const urls = await getUrls(inputs.sitemapUrl).then((urls: string[]) =>
     urls

@@ -18,3 +18,4 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
       - run: ls -lh /tmp
+      - run: ls -lh /tmp/tmp

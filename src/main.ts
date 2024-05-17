@@ -15,7 +15,7 @@ export default async function main() {
   const inputs = getInputs();
   const includeRegex = new RegExp(inputs.include);
 
-  const outpath = "/tmp/pa11y.csv";
+  const outpath = `/tmp/pa11y-${sha}.csv`;
 
   const urls = await getUrls(inputs.sitemapUrl).then((urls: string[]) =>
     urls
@@ -43,10 +43,10 @@ export default async function main() {
     return;
   }
 
-  await artifact.downloadArtifact(baseArtifact.id, { path: "/tmp" });
+  await artifact.downloadArtifact(baseArtifact.id, { path: "/" });
 
   console.log("Comparing issues and commenting on PR");
   await commentIssues(
-    await compareIssues(`/tmp/pa11y-ratchet-${baseSha}`, outpath)
+    await compareIssues(`/tmp/pa11y-${baseSha}.csv`, outpath)
   );
 }

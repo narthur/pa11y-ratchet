@@ -42,6 +42,7 @@ export default async function main() {
 
   if (!baseArtifact) {
     console.log("No base artifact found, skipping comparison");
+    console.log("baseSha", baseSha);
     return;
   }
 

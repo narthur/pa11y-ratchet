@@ -1,5 +1,5 @@
 import * as csv from "fast-csv";
-import { createWriteStream, unlinkSync, existsSync } from "fs";
+import { createWriteStream, unlinkSync, existsSync, readFileSync } from "fs";
 
 export default async function writeCsv(
   outpath: string,
@@ -25,4 +25,8 @@ export default async function writeCsv(
   csvStream.end();
 
   console.log(`CSV written to ${outpath}`);
+
+  const content = readFileSync(outpath, "utf8");
+  console.log("CSV content:");
+  console.log(content);
 }

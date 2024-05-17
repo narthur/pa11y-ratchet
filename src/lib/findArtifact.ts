@@ -13,5 +13,9 @@ export default async function findArtifact(sha: string) {
     per_page: 1,
   });
 
+  if (!sha) {
+    return undefined;
+  }
+
   return result.data.artifacts.pop();
 }

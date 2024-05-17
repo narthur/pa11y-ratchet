@@ -40,12 +40,15 @@ export default async function main() {
     artifact.name.includes(baseSha)
   );
 
-  if (baseArtifact) {
-    await artifact.downloadArtifact(baseArtifact.id, { path: "/" });
-
-    console.log("Comparing issues and commenting on PR");
-    await commentIssues(
-      await compareIssues(`/pa11y-ratchet-${baseSha}`, outpath)
-    );
+  if (!baseArtifact) {
+    console.log("No base artifact found, skipping comparison");
+    return;
   }
+
+  await artifact.downloadArtifact(baseArtifact.id, { path: "/" });
+
+  console.log("Comparing issues and commenting on PR");
+  await commentIssues(
+    await compareIssues(`/pa11y-ratchet-${baseSha}`, outpath)
+  );
 }

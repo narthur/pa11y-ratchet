@@ -6,6 +6,7 @@ import github from "@actions/github";
 import getInputs from "./lib/getInputs.js";
 import commentIssues from "./lib/commentIssues.js";
 import compareIssues from "./lib/compareIssues.js";
+import findArtifact from "./lib/findArtifact.js";
 
 export default async function main() {
   const artifact = new DefaultArtifactClient();
@@ -34,13 +35,7 @@ export default async function main() {
 
   await artifact.uploadArtifact(`pa11y-ratchet-${sha}`, [outpath], "/");
 
-  const result = await artifact.listArtifacts();
-
-  console.log(result.artifacts);
-
-  const baseArtifact = result.artifacts.find((artifact) =>
-    artifact.name.includes(baseSha)
-  );
+  const baseArtifact = await findArtifact(baseSha);
 
   if (!baseArtifact) {
     console.log("No base artifact found, skipping comparison");

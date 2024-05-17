@@ -7,6 +7,7 @@ export default async function writeCsv(
 ) {
   console.log(`Writing CSV to ${outpath}`);
   console.log("Number of rows:", rows.length);
+  console.dir(rows, { depth: null });
 
   if (existsSync(outpath)) {
     unlinkSync(outpath);

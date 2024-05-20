@@ -53,6 +53,8 @@ export default async function main() {
     return;
   }
 
+  console.log("Downloading base artifact", baseArtifact.id, baseArtifact.name);
+
   await downloadArtifact({
     artifactId: baseArtifact.id,
     owner: github.context.repo.owner,

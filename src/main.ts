@@ -44,7 +44,7 @@ export default async function main() {
   }
 
   const response = await artifact.downloadArtifact(baseArtifact.id, {
-    path: "/test",
+    path: "/",
   });
   console.dir(response, { depth: null });
 

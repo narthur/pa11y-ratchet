@@ -27,5 +27,5 @@ export default async function downloadArtifact(
   const outpath = `${options.outdir}/artifact.zip`;
 
   await exec.exec("curl", ["-L", response.url, "-o", outpath]);
-  await exec.exec("unzip", [outpath]);
+  await exec.exec("unzip", ["-n", outpath]);
 }

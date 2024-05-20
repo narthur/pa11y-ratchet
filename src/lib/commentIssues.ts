@@ -2,9 +2,9 @@ import github from "@actions/github";
 import octokit from "../services/octokit.js";
 
 function issue(data: Record<string, unknown>) {
-  return `<li>${Object.entries(data)
-    .map(([key, value]) => `<p>${key}: ${value}</p>`)
-    .join("\n")}</li>`;
+  return `<li><p>${Object.entries(data)
+    .map(([key, value]) => `<strong>${key}:</strong> ${value}<br/>`)
+    .join("\n")}</p></li>`;
 }
 
 function issuesList(issues: Record<string, unknown>[]) {

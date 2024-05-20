@@ -57,6 +57,7 @@ export default async function main() {
     artifactId: baseArtifact.id,
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
+    outdir,
   });
 
   console.log("Comparing issues and commenting on PR");

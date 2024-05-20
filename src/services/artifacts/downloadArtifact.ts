@@ -5,6 +5,7 @@ type Options = {
   artifactId: number;
   owner: string;
   repo: string;
+  outdir: string;
 };
 
 export default async function downloadArtifact(
@@ -23,6 +24,8 @@ export default async function downloadArtifact(
     archive_format: "zip",
   });
 
-  await exec.exec("curl", ["-L", response.url, "-o", "artifact.zip"]);
-  await exec.exec("unzip", ["artifact.zip"]);
+  const outpath = `${options.outdir}/artifact.zip`;
+
+  await exec.exec("curl", ["-L", response.url, "-o", outpath]);
+  await exec.exec("unzip", [outpath]);
 }

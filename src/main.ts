@@ -43,7 +43,7 @@ export default async function main() {
     return;
   }
 
-  await artifact.downloadArtifact(baseArtifact.id, { path: "/" });
+  await artifact.downloadArtifact(baseArtifact.id, { path: "/test" });
 
   console.log("Comparing issues and commenting on PR");
   await commentIssues(

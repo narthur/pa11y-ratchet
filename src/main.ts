@@ -18,6 +18,10 @@ export default async function main() {
 
   console.log({ workspace });
 
+  if (!workspace) {
+    throw new Error("GITHUB_WORKSPACE not set");
+  }
+
   const outdir = workspace;
   const outname = `pa11y-${sha}.csv`;
   const outpath = `${outdir}/${outname}`;

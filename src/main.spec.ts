@@ -4,23 +4,14 @@ import getUrls from "./lib/getUrls.js";
 import pa11y from "pa11y";
 import getInputs from "./lib/getInputs.js";
 import { DefaultArtifactClient } from "@actions/artifact";
+import findArtifact from "./services/artifacts/findArtifact.js";
 
 describe("main", () => {
   beforeEach(() => {
-    vi.mocked(DefaultArtifactClient.prototype.listArtifacts).mockResolvedValue({
-      artifacts: [
-        {
-          name: "pa11y-ratchet-the_base_sha",
-          id: 3,
-          size: 0,
-        },
-        {
-          name: "pa11y-ratchet-another_sha",
-          id: 5,
-          size: 0,
-        },
-      ],
-    });
+    vi.mocked(findArtifact).mockResolvedValue({
+      name: "pa11y-ratchet-the_base_sha",
+      id: 3,
+    } as any);
   });
 
   it("gets sitemap", async () => {
@@ -54,12 +45,6 @@ describe("main", () => {
     await main();
 
     expect(pa11y).toBeCalledWith(expect.stringContaining("the_replace"));
-  });
-
-  it("lists artifacts", async () => {
-    await main();
-
-    expect(DefaultArtifactClient.prototype.listArtifacts).toBeCalled();
   });
 
   it("downloads base sha artifact", async () => {

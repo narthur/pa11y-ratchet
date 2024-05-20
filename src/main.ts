@@ -6,7 +6,7 @@ import github from "@actions/github";
 import getInputs from "./lib/getInputs.js";
 import commentIssues from "./lib/commentIssues.js";
 import compareIssues from "./lib/compareIssues.js";
-import findArtifact from "./lib/findArtifact.js";
+import findArtifact from "./services/artifacts/findArtifact.js";
 
 export default async function main() {
   const artifact = new DefaultArtifactClient();

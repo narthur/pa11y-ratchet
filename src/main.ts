@@ -15,7 +15,9 @@ export default async function main() {
   const inputs = getInputs();
   const includeRegex = new RegExp(inputs.include);
 
-  const outpath = `/tmp/pa11y-${sha}.csv`;
+  const outdir = "/tmp";
+  const outname = `pa11y-${sha}.csv`;
+  const outpath = `${outdir}/${outname}`;
 
   const urls = await getUrls(inputs.sitemapUrl).then((urls: string[]) =>
     urls
@@ -33,7 +35,7 @@ export default async function main() {
 
   await writeCsv(outpath, issues);
 
-  await artifact.uploadArtifact(`pa11y-ratchet-${sha}`, [outpath], "/");
+  await artifact.uploadArtifact(`pa11y-ratchet-${sha}`, [outname], outdir);
 
   const baseArtifact = await findArtifact(baseSha);
 
@@ -44,7 +46,7 @@ export default async function main() {
   }
 
   const response = await artifact.downloadArtifact(baseArtifact.id, {
-    path: "/",
+    path: outdir,
   });
   console.dir(response, { depth: null });
 

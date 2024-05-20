@@ -7,6 +7,7 @@ import getInputs from "./lib/getInputs.js";
 import commentIssues from "./lib/commentIssues.js";
 import compareIssues from "./lib/compareIssues.js";
 import findArtifact from "./services/artifacts/findArtifact.js";
+import downloadArtifact from "./services/artifacts/downloadArtifact.js";
 
 export default async function main() {
   const artifact = new DefaultArtifactClient();
@@ -52,10 +53,11 @@ export default async function main() {
     return;
   }
 
-  const response = await artifact.downloadArtifact(baseArtifact.id, {
-    path: outdir,
+  await downloadArtifact({
+    artifactId: baseArtifact.id,
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
   });
-  console.dir({ response }, { depth: null });
 
   console.log("Comparing issues and commenting on PR");
   await commentIssues(

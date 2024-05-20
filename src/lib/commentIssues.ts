@@ -2,9 +2,13 @@ import github from "@actions/github";
 import octokit from "../services/octokit.js";
 
 function issue(data: Record<string, unknown>) {
-  return Object.entries(data)
+  return `<li>${Object.entries(data)
     .map(([key, value]) => `${key}: ${value}`)
-    .join("\n");
+    .join("\n")}</li>`;
+}
+
+function issuesList(issues: Record<string, unknown>[]) {
+  return `<ol>${issues.map(issue).join("\n")}</ol>`;
 }
 
 export default async function commentIssues(issues: {
@@ -22,16 +26,16 @@ export default async function commentIssues(issues: {
   
   ### New Issues (${issues.new.length})
 
-  ${issues.new.map(issue).join("\n")}
+  ${issuesList(issues.new)}
 
   ### Fixed Issues (${issues.fixed.length})
 
-  ${issues.fixed.map(issue).join("\n")}
+  ${issuesList(issues.fixed)}
 
   <details>
   <summary><h3>Retained Issues (${issues.retained.length})</h3></summary>
   
-  ${issues.retained.map(issue).join("\n")}
+  ${issuesList(issues.retained)}
 
   </details>
   `;

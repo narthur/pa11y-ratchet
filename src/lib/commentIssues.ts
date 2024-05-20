@@ -3,7 +3,7 @@ import octokit from "../services/octokit.js";
 
 function issue(data: Record<string, unknown>) {
   return `<li>${Object.entries(data)
-    .map(([key, value]) => `${key}: ${value}`)
+    .map(([key, value]) => `<p>${key}: ${value}</p>`)
     .join("\n")}</li>`;
 }
 

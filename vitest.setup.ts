@@ -52,6 +52,7 @@ vi.mock("./src/lib/readCsv.js", () => ({
   default: vi.fn(() => Promise.resolve([])),
 }));
 vi.mock("./src/lib/writeCsv.js");
+vi.mock("./src/services/artifacts/downloadArtifact.js");
 vi.mock("./src/services/artifacts/findArtifact.js");
 
 vi.mock("fast-csv", () => ({

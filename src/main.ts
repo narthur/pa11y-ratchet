@@ -8,6 +8,7 @@ import commentIssues from "./lib/commentIssues.js";
 import compareIssues from "./lib/compareIssues.js";
 import findArtifact from "./services/artifacts/findArtifact.js";
 import downloadArtifact from "./services/artifacts/downloadArtifact.js";
+import core from "@actions/core";
 
 export default async function main() {
   const artifact = new DefaultArtifactClient();
@@ -62,8 +63,13 @@ export default async function main() {
     outdir,
   });
 
-  console.log("Comparing issues and commenting on PR");
-  await commentIssues(
-    await compareIssues(`${workspace}/pa11y-${baseSha}.csv`, outpath)
+  const comparison = await compareIssues(
+    `${workspace}/pa11y-${baseSha}.csv`,
+    outpath
   );
+
+  console.log("Comparing issues and commenting on PR");
+  await commentIssues(comparison);
+
+  if (comparison.new.length) core.setFailed("Found new accessibility issues");
 }

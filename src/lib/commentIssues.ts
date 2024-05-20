@@ -6,7 +6,9 @@ export default async function commentIssues(issues: {
   fixed: unknown[];
   retained: unknown[];
 }) {
-  const commentBody = `Pa11y found the following issues in this pull request:`;
+  const commentBody = `Pa11y found the following issues in this pull request: ${JSON.stringify(
+    issues
+  )}`;
   const issue_number = github.context.payload.pull_request?.number;
 
   if (!issue_number) {

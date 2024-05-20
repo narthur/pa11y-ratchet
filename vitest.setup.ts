@@ -51,8 +51,11 @@ vi.mock("./src/lib/getUrls.js", () => ({
   default: vi.fn(() => Promise.resolve(["url1", "url2"])),
 }));
 
-vi.mock("./src/lib/readCsv.js");
+vi.mock("./src/lib/readCsv.js", () => ({
+  default: vi.fn(() => Promise.resolve([])),
+}));
 vi.mock("./src/lib/writeCsv.js");
+vi.mock("./src/services/artifacts/findArtifact.js");
 
 vi.mock("fast-csv", () => ({
   format: vi.fn(() => ({

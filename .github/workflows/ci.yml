@@ -17,3 +17,6 @@ jobs:
         with:
           sitemap-url: https://pinepeakdigital.com/sitemap.xml
           github-token: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+      - run: ls -lh /
+      - run: ls -lh /tmp

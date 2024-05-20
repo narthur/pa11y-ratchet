@@ -6,7 +6,7 @@ import github from "@actions/github";
 import getInputs from "./lib/getInputs.js";
 import commentIssues from "./lib/commentIssues.js";
 import compareIssues from "./lib/compareIssues.js";
-import findArtifact from "./lib/findArtifact.js";
+import findArtifact from "./services/artifacts/findArtifact.js";
 
 export default async function main() {
   const artifact = new DefaultArtifactClient();
@@ -15,7 +15,9 @@ export default async function main() {
   const inputs = getInputs();
   const includeRegex = new RegExp(inputs.include);
 
-  const outpath = `/tmp/pa11y-${sha}.csv`;
+  const outdir = "/tmp";
+  const outname = `pa11y-${sha}.csv`;
+  const outpath = `${outdir}/${outname}`;
 
   const urls = await getUrls(inputs.sitemapUrl).then((urls: string[]) =>
     urls
@@ -33,7 +35,7 @@ export default async function main() {
 
   await writeCsv(outpath, issues);
 
-  await artifact.uploadArtifact(`pa11y-ratchet-${sha}`, [outpath], "/");
+  await artifact.uploadArtifact(`pa11y-ratchet-${sha}`, [outname], outdir);
 
   const baseArtifact = await findArtifact(baseSha);
 
@@ -43,9 +45,10 @@ export default async function main() {
     return;
   }
 
-  console.log("Base artifact:", baseArtifact);
-
-  await artifact.downloadArtifact(baseArtifact.id, { path: "/" });
+  const response = await artifact.downloadArtifact(baseArtifact.id, {
+    path: outdir,
+  });
+  console.dir(response, { depth: null });
 
   console.log("Comparing issues and commenting on PR");
   await commentIssues(

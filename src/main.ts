@@ -14,8 +14,11 @@ export default async function main() {
   const baseSha = github.context.payload.pull_request?.base.sha;
   const inputs = getInputs();
   const includeRegex = new RegExp(inputs.include);
+  const workspace = process.env.GITHUB_WORKSPACE;
 
-  const outdir = "/tmp";
+  console.log({ workspace });
+
+  const outdir = workspace;
   const outname = `pa11y-${sha}.csv`;
   const outpath = `${outdir}/${outname}`;
 

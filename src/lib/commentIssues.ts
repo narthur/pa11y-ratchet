@@ -3,7 +3,9 @@ import octokit from "../services/octokit.js";
 
 function issue(data: Record<string, unknown>) {
   return `<li><p>${Object.entries(data)
-    .map(([key, value]) => `<strong>${key}:</strong> ${value}<br/>`)
+    .map(
+      ([key, value]) => `<strong>${key}:</strong> ${JSON.stringify(value)}<br/>`
+    )
     .join("\n")}</p></li>`;
 }
 

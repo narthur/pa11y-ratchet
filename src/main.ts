@@ -43,7 +43,10 @@ export default async function main() {
     return;
   }
 
-  await artifact.downloadArtifact(baseArtifact.id, { path: "/test" });
+  const response = await artifact.downloadArtifact(baseArtifact.id, {
+    path: "/test",
+  });
+  console.dir(response, { depth: null });
 
   console.log("Comparing issues and commenting on PR");
   await commentIssues(

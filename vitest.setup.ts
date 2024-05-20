@@ -1,5 +1,7 @@
 import { vi } from "vitest";
 
+vi.stubEnv("GITHUB_WORKSPACE", "/github/workspace");
+
 const fs: {
   readFileSync: (path: string, encoding: string) => string;
 } = await vi.importActual("fs");

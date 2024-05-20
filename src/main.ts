@@ -14,8 +14,15 @@ export default async function main() {
   const baseSha = github.context.payload.pull_request?.base.sha;
   const inputs = getInputs();
   const includeRegex = new RegExp(inputs.include);
+  const workspace = process.env.GITHUB_WORKSPACE;
 
-  const outdir = "/tmp";
+  console.log({ workspace });
+
+  if (!workspace) {
+    throw new Error("GITHUB_WORKSPACE not set");
+  }
+
+  const outdir = workspace;
   const outname = `pa11y-${sha}.csv`;
   const outpath = `${outdir}/${outname}`;
 
@@ -48,7 +55,7 @@ export default async function main() {
   const response = await artifact.downloadArtifact(baseArtifact.id, {
     path: outdir,
   });
-  console.dir(response, { depth: null });
+  console.dir({ response }, { depth: null });
 
   console.log("Comparing issues and commenting on PR");
   await commentIssues(

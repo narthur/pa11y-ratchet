@@ -59,6 +59,6 @@ export default async function main() {
 
   console.log("Comparing issues and commenting on PR");
   await commentIssues(
-    await compareIssues(`/${workspace}/pa11y-${baseSha}.csv`, outpath)
+    await compareIssues(`${workspace}/pa11y-${baseSha}.csv`, outpath)
   );
 }

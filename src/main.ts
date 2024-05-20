@@ -11,20 +11,20 @@ import downloadArtifact from "./services/artifacts/downloadArtifact.js";
 
 export default async function main() {
   const artifact = new DefaultArtifactClient();
-  const sha = github.context.sha;
+  const eventSha = github.context.sha;
   const baseSha = github.context.payload.pull_request?.base.sha;
   const inputs = getInputs();
   const includeRegex = new RegExp(inputs.include);
   const workspace = process.env.GITHUB_WORKSPACE;
 
-  console.log({ workspace });
+  console.log({ baseSha, eventSha, workspace });
 
   if (!workspace) {
     throw new Error("GITHUB_WORKSPACE not set");
   }
 
   const outdir = workspace;
-  const outname = `pa11y-${sha}.csv`;
+  const outname = `pa11y-${eventSha}.csv`;
   const outpath = `${outdir}/${outname}`;
 
   const urls = await getUrls(inputs.sitemapUrl).then((urls: string[]) =>
@@ -43,7 +43,7 @@ export default async function main() {
 
   await writeCsv(outpath, issues);
 
-  await artifact.uploadArtifact(`pa11y-ratchet-${sha}`, [outname], outdir);
+  await artifact.uploadArtifact(`pa11y-ratchet-${eventSha}`, [outname], outdir);
 
   const baseArtifact = await findArtifact(baseSha);
 

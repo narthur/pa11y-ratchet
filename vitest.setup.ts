@@ -2,11 +2,6 @@ import { vi } from "vitest";
 
 vi.stubEnv("GITHUB_WORKSPACE", "/github/workspace");
 
-const fs: {
-  readFileSync: (path: string, encoding: string) => string;
-} = await vi.importActual("fs");
-const sitemap = fs.readFileSync("data/sitemap.xml", "utf8");
-
 vi.mock("@actions/artifact");
 vi.mock("@actions/core");
 
@@ -80,7 +75,7 @@ vi.mock("fs", () => ({
 }));
 
 vi.mock("node-fetch", () => ({
-  default: vi.fn(() => Promise.resolve({ text: vi.fn(() => sitemap) })),
+  default: vi.fn(() => Promise.resolve({ text: vi.fn(() => "") })),
 }));
 
 vi.mock("pa11y", () => ({

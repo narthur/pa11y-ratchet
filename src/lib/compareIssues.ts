@@ -4,9 +4,9 @@ export default async function compareIssues(
   baseCsvPath: string,
   eventCsvPath: string
 ): Promise<{
-  new: unknown[];
-  fixed: unknown[];
-  retained: unknown[];
+  new: Record<string, unknown>[];
+  fixed: Record<string, unknown>[];
+  retained: Record<string, unknown>[];
 }> {
   const baseIssues = await readCsv(baseCsvPath);
   const eventIssues = await readCsv(eventCsvPath);

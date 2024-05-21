@@ -19,7 +19,7 @@ function issue(data: Record<string, unknown>) {
 ${
   data.context
     ? `<div><pre><code>${escapeHtml(
-        String(data.context).replace("><", ">\n<")
+        String(data.context).replaceAll("><", ">\n<")
       )}</code></pre></div>`
     : ``
 }

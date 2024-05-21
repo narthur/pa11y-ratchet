@@ -12,10 +12,14 @@ function escapeHtml(text: string) {
 
 function issue(data: Record<string, unknown>) {
   return `
-<p>${data.type}: ${data.code}</p>
+<p><strong>${data.type}: ${data.code}</strong></p>
 <blockquote>${data.message}</blockquote>
-<p>${data.selector}</p>
-${data.context ? `<p>${escapeHtml(String(data.context))}</p>` : ``}
+<p><code>${data.selector}</code></p>
+${
+  data.context
+    ? `<div><pre><code>${escapeHtml(String(data.context))}</code></pre></div>`
+    : ``
+}
 `;
 }
 

@@ -3,8 +3,10 @@ import { describe, it, beforeEach, vi, expect } from "vitest";
 import getUrls from "./lib/getUrls.js";
 import pa11y from "pa11y";
 import getInputs from "./lib/getInputs.js";
-import { DefaultArtifactClient } from "@actions/artifact";
 import findArtifact from "./services/artifacts/findArtifact.js";
+import downloadArtifact from "./services/artifacts/downloadArtifact.js";
+import core from "@actions/core";
+import readCsv from "./lib/readCsv.js";
 
 describe("main", () => {
   beforeEach(() => {
@@ -50,9 +52,27 @@ describe("main", () => {
   it("downloads base sha artifact", async () => {
     await main();
 
-    expect(DefaultArtifactClient.prototype.downloadArtifact).toBeCalledWith(
-      3,
-      expect.anything()
+    expect(downloadArtifact).toBeCalledWith(
+      expect.objectContaining({ artifactId: 3 })
     );
+  });
+
+  it("sets failed status if new issues found", async () => {
+    vi.mocked(readCsv).mockImplementation((path: string) => {
+      if (path.includes("the_base_sha")) {
+        return Promise.resolve([]);
+      }
+      return Promise.resolve([{}]);
+    });
+
+    await main();
+
+    expect(core.setFailed).toBeCalled();
+  });
+
+  it("does not set failed status if no new issues found", async () => {
+    await main();
+
+    expect(core.setFailed).not.toBeCalled();
   });
 });

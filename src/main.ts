@@ -7,23 +7,25 @@ import getInputs from "./lib/getInputs.js";
 import commentIssues from "./lib/commentIssues.js";
 import compareIssues from "./lib/compareIssues.js";
 import findArtifact from "./services/artifacts/findArtifact.js";
+import downloadArtifact from "./services/artifacts/downloadArtifact.js";
+import core from "@actions/core";
 
 export default async function main() {
   const artifact = new DefaultArtifactClient();
-  const sha = github.context.sha;
+  const eventSha = github.context.sha;
   const baseSha = github.context.payload.pull_request?.base.sha;
   const inputs = getInputs();
   const includeRegex = new RegExp(inputs.include);
   const workspace = process.env.GITHUB_WORKSPACE;
 
-  console.log({ workspace });
+  console.log({ baseSha, eventSha, workspace });
 
   if (!workspace) {
     throw new Error("GITHUB_WORKSPACE not set");
   }
 
   const outdir = workspace;
-  const outname = `pa11y-${sha}.csv`;
+  const outname = `pa11y-${eventSha}.csv`;
   const outpath = `${outdir}/${outname}`;
 
   const urls = await getUrls(inputs.sitemapUrl).then((urls: string[]) =>
@@ -42,7 +44,7 @@ export default async function main() {
 
   await writeCsv(outpath, issues);
 
-  await artifact.uploadArtifact(`pa11y-ratchet-${sha}`, [outname], outdir);
+  await artifact.uploadArtifact(`pa11y-ratchet-${eventSha}`, [outname], outdir);
 
   const baseArtifact = await findArtifact(baseSha);
 
@@ -52,13 +54,22 @@ export default async function main() {
     return;
   }
 
-  const response = await artifact.downloadArtifact(baseArtifact.id, {
-    path: outdir,
+  console.log("Downloading base artifact", baseArtifact.id, baseArtifact.name);
+
+  await downloadArtifact({
+    artifactId: baseArtifact.id,
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    outdir,
   });
-  console.dir({ response }, { depth: null });
+
+  const comparison = await compareIssues(
+    `${workspace}/pa11y-${baseSha}.csv`,
+    outpath
+  );
 
   console.log("Comparing issues and commenting on PR");
-  await commentIssues(
-    await compareIssues(`/tmp/pa11y-${baseSha}.csv`, outpath)
-  );
+  await commentIssues(comparison);
+
+  if (comparison.new.length) core.setFailed("Found new accessibility issues");
 }

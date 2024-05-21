@@ -1,6 +1,8 @@
 import github from "@actions/github";
 import octokit from "../services/octokit.js";
 
+const BODY_PREFIX = "<!-- pa11y summary -->";
+
 function escapeHtml(text: string) {
   return text
     .replace(/&/g, "&amp;")
@@ -41,7 +43,8 @@ export default async function commentIssues(issues: {
     throw new Error("No issue number found in the context");
   }
 
-  const body = `Pa11y found the following issues in this pull request:
+  const body = `${BODY_PREFIX}
+  Pa11y found the following issues in this pull request:
   
   ### 🚨 New Issues (${issues.new.length})
 
@@ -59,10 +62,29 @@ export default async function commentIssues(issues: {
   </details>
   `;
 
-  await octokit.rest.issues.createComment({
-    body,
+  const { data: comments } = await octokit.rest.issues.listComments({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
     issue_number,
   });
+
+  const existingComment = comments.find(({ body }) =>
+    body?.startsWith(BODY_PREFIX)
+  );
+
+  if (existingComment) {
+    await octokit.rest.issues.updateComment({
+      body,
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      comment_id: existingComment.id,
+    });
+  } else {
+    await octokit.rest.issues.createComment({
+      body,
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      issue_number,
+    });
+  }
 }

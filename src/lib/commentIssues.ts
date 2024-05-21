@@ -43,16 +43,16 @@ export default async function commentIssues(issues: {
 
   const body = `Pa11y found the following issues in this pull request:
   
-  ### New Issues (${issues.new.length})
+  ### 🚨 New Issues (${issues.new.length})
 
   ${issuesList(issues.new)}
 
-  ### Fixed Issues (${issues.fixed.length})
+  ### 🎉 Fixed Issues (${issues.fixed.length})
 
   ${issuesList(issues.fixed)}
 
   <details>
-  <summary><h3>Retained Issues (${issues.retained.length})</h3></summary>
+  <summary><h3>⚠️ Retained Issues (${issues.retained.length})</h3></summary>
   
   ${issuesList(issues.retained)}
 

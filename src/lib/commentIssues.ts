@@ -1,12 +1,22 @@
 import github from "@actions/github";
 import octokit from "../services/octokit.js";
 
+function escapeHtml(text: string) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function issue(data: Record<string, unknown>) {
-  return `<li><p>${Object.entries(data)
-    .map(
-      ([key, value]) => `<strong>${key}:</strong> ${JSON.stringify(value)}<br/>`
-    )
-    .join("\n")}</p></li>`;
+  return `<li>
+  <p>${data.type}: ${data.code}</p>
+  <p>${data.message}</p>
+  <p>${data.selector}</p>
+  ${data.context ? `<p>${escapeHtml(String(data.context))}</p>` : ``}
+  </li>`;
 }
 
 function issuesList(issues: Record<string, unknown>[]) {

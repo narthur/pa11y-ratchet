@@ -44,22 +44,40 @@ export default async function commentIssues(issues: {
   }
 
   const body = `${BODY_PREFIX}
-  Pa11y found the following issues in this pull request:
+  ${
+    !issues.new.length && !issues.fixed.length && !issues.retained.length
+      ? "🎉 Pa11y found no accessibility issues!"
+      : "Pa11y found the following issues in this pull request:"
+  }
   
-  ### 🚨 New Issues (${issues.new.length})
+${
+  issues.new.length
+    ? `  ### 🚨 New Issues (${issues.new.length})
 
-  ${issuesList(issues.new)}
+${issuesList(issues.new)}`
+    : ""
+}
 
-  ### 🎉 Fixed Issues (${issues.fixed.length})
+${
+  issues.fixed.length
+    ? `  ### 🎉 Fixed Issues (${issues.fixed.length})
 
-  ${issuesList(issues.fixed)}
+  ${issuesList(issues.fixed)}`
+    : ""
+}
+
+${
+  issues.retained.length
+    ? ` 
 
   <details>
   <summary><h3>⚠️ Retained Issues (${issues.retained.length})</h3></summary>
   
   ${issuesList(issues.retained)}
 
-  </details>
+  </details> `
+    : ""
+}
   `;
 
   const { data: comments } = await octokit.rest.issues.listComments({

@@ -21,6 +21,9 @@ jobs:
         run: |
           VER=$(node -p "require('./package.json').version")
           VER_SHORT=$(echo $VER | cut -d. -f1)
+          echo "Publishing $VER"
           gh release create v$VER action.yml $(find dist -type f) $(find node_modules -type f) --generate-notes
+          echo "Deleting previous $VER_SHORT"
           gh release delete v$VER_SHORT --yes --cleanup-tag || true
+          echo "Publishing $VER_SHORT"
           gh release create v$VER_SHORT action.yml $(find dist -type f) $(find node_modules -type f) --generate-notes

@@ -47,7 +47,7 @@ export default async function commentIssues(issues: {
   ${
     !issues.new.length && !issues.fixed.length && !issues.retained.length
       ? "🎉 Pa11y found no accessibility issues!"
-      : "Pa11y found the following issues in this pull request:"
+      : "Pa11y found the following accessibility issues:"
   }
   
 ${

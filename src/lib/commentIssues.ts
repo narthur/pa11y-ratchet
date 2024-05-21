@@ -11,16 +11,16 @@ function escapeHtml(text: string) {
 }
 
 function issue(data: Record<string, unknown>) {
-  return `<li>
-  <p>${data.type}: ${data.code}</p>
-  <p>${data.message}</p>
-  <p>${data.selector}</p>
-  ${data.context ? `<p>${escapeHtml(String(data.context))}</p>` : ``}
-  </li>`;
+  return `
+<p>${data.type}: ${data.code}</p>
+<blockquote>${data.message}</blockquote>
+<p>${data.selector}</p>
+${data.context ? `<p>${escapeHtml(String(data.context))}</p>` : ``}
+`;
 }
 
 function issuesList(issues: Record<string, unknown>[]) {
-  return `<ol>${issues.map(issue).join("\n")}</ol>`;
+  return `${issues.map(issue).join("<hr/>")}`;
 }
 
 export default async function commentIssues(issues: {

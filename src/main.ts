@@ -9,7 +9,7 @@ import compareIssues from "./lib/compareIssues.js";
 import findArtifact from "./services/github/findArtifact.js";
 import downloadArtifact from "./services/github/downloadArtifact.js";
 import core from "@actions/core";
-import findPr from "./services/github/findPR.js";
+import findPr from "./services/github/findPr.js";
 
 export default async function main() {
   const artifact = new DefaultArtifactClient();

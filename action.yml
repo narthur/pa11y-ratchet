@@ -36,4 +36,4 @@ runs:
     #     ACTIONS_RUNTIME_TOKEN: ${{ secrets.GITHUB_RUNTIME_TOKEN }}
     - uses: actions/github-script@v7
       with:
-        script: import "./dist/index.js"
+        script: await import("${{ github.workspace }}/dist/index.js)"

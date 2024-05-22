@@ -1,5 +1,3 @@
-import core from "@actions/core";
-
 export default function getInputs(): {
   sitemapUrl: string;
   find: string;
@@ -7,9 +5,9 @@ export default function getInputs(): {
   include: string;
 } {
   return {
-    sitemapUrl: core.getInput("sitemap-url"),
-    find: core.getInput("find"),
-    replace: core.getInput("replace"),
-    include: core.getInput("include"),
+    sitemapUrl: process.env.SITEMAP_URL || "",
+    find: process.env.FIND || "",
+    replace: process.env.REPLACE || "",
+    include: process.env.INCLUDE || "",
   };
 }

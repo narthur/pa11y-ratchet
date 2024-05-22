@@ -27,9 +27,9 @@ runs:
       shell: bash
     - run: node ./dist/index.js
       shell: bash
-      with:
-        sitemap-url: ${{ inputs.sitemap-url }}
-        github-token: ${{ inputs.github-token }}
-        find: ${{ inputs.find }}
-        replace: ${{ inputs.replace }}
-        include: ${{ inputs.include }}
+      env:
+        SITEMAP_URL: ${{ inputs.sitemap-url }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        FIND: ${{ inputs.find }}
+        REPLACE: ${{ inputs.replace }}
+        INCLUDE: ${{ inputs.include }}

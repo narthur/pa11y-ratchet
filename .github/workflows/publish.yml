@@ -23,8 +23,8 @@ jobs:
           VER=$(node -p "require('./package.json').version")
           VER_SHORT=$(echo $VER | cut -d. -f1)
           echo "Publishing $VER"
-          gh release create v$VER action.yml .nvmrc package.json pnpm-lock.yaml $(find dist -type f) --generate-notes
+          gh release create v$VER action.yml .nvmrc package.json pnpm-lock.yaml index.js --generate-notes
           echo "Deleting previous $VER_SHORT"
           gh release delete v$VER_SHORT --yes --cleanup-tag || true
           echo "Publishing $VER_SHORT"
-          gh release create v$VER_SHORT action.yml .nvmrc package.json pnpm-lock.yaml $(find dist -type f) --generate-notes
+          gh release create v$VER_SHORT action.yml .nvmrc package.json pnpm-lock.yaml index.js --generate-notes

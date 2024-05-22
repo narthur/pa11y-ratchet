@@ -6,6 +6,6 @@ await esbuild.build({
   platform: "node",
   target: "esnext",
   format: "esm",
-  outfile: "index.js",
+  outfile: "dist/index.js",
   packages: "external",
 });

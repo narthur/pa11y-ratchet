@@ -7,6 +7,7 @@ import findArtifact from "./services/github/findArtifact.js";
 import downloadArtifact from "./services/github/downloadArtifact.js";
 import core from "@actions/core";
 import readCsv from "./lib/readCsv.js";
+import { DefaultArtifactClient } from "@actions/artifact";
 
 describe("main", () => {
   beforeEach(() => {
@@ -74,5 +75,15 @@ describe("main", () => {
     await main();
 
     expect(core.setFailed).not.toBeCalled();
+  });
+
+  it("uses head sha to name artifact", async () => {
+    await main();
+
+    expect(DefaultArtifactClient.prototype.uploadArtifact).toBeCalledWith(
+      expect.stringContaining("the_head_sha"),
+      expect.anything(),
+      expect.anything()
+    );
   });
 });

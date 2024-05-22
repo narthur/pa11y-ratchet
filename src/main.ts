@@ -20,7 +20,7 @@ export default async function main() {
   const includeRegex = new RegExp(inputs.include);
   const workspace = process.env.GITHUB_WORKSPACE;
 
-  console.log({ baseSha, eventSha, workspace });
+  console.log({ pr, baseSha, eventSha, workspace });
 
   if (!workspace) {
     throw new Error("GITHUB_WORKSPACE not set");

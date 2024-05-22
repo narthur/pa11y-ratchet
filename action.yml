@@ -25,11 +25,15 @@ runs:
         version: 9
     - run: pnpm install --prod
       shell: bash
-    - run: node ./dist/index.js
-      shell: bash
-      env:
-        SITEMAP_URL: ${{ inputs.sitemap-url }}
-        GITHUB_TOKEN: ${{ inputs.github-token }}
-        FIND: ${{ inputs.find }}
-        REPLACE: ${{ inputs.replace }}
-        INCLUDE: ${{ inputs.include }}
+    # - run: node ./dist/index.js
+    #   shell: bash
+    #   env:
+    #     SITEMAP_URL: ${{ inputs.sitemap-url }}
+    #     GITHUB_TOKEN: ${{ inputs.github-token }}
+    #     FIND: ${{ inputs.find }}
+    #     REPLACE: ${{ inputs.replace }}
+    #     INCLUDE: ${{ inputs.include }}
+    #     ACTIONS_RUNTIME_TOKEN: ${{ secrets.GITHUB_RUNTIME_TOKEN }}
+    - uses: actions/github-script@v7
+      with:
+        script: import "./dist/index.js"

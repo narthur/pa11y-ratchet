@@ -3,8 +3,8 @@ import { describe, it, beforeEach, vi, expect } from "vitest";
 import getUrls from "./lib/getUrls.js";
 import pa11y from "pa11y";
 import getInputs from "./lib/getInputs.js";
-import findArtifact from "./services/artifacts/findArtifact.js";
-import downloadArtifact from "./services/artifacts/downloadArtifact.js";
+import findArtifact from "./services/github/findArtifact.js";
+import downloadArtifact from "./services/github/downloadArtifact.js";
 import core from "@actions/core";
 import readCsv from "./lib/readCsv.js";
 

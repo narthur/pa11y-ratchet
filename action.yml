@@ -16,9 +16,22 @@ inputs:
   include:
     description: "Only include URLs that match this regular expression"
     required: false
-outputs:
-  pa11y-output:
-    description: "The Pa11y output"
 runs:
-  using: "node20"
-  main: "index.js"
+  using: "composite"
+  steps:
+    - uses: actions/setup-node@v4
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 9
+    - run: pnpm install --prod
+      shell: bash
+    - uses: actions/github-script@v7
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: await import("${{ github.workspace }}/dist/index.js")
+      env:
+        SITEMAP_URL: ${{ inputs.sitemap-url }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        FIND: ${{ inputs.find }}
+        REPLACE: ${{ inputs.replace }}
+        INCLUDE: ${{ inputs.include }}

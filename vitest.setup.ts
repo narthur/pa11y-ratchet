@@ -13,7 +13,13 @@ vi.mock("@actions/github", () => ({
         repo: "repo",
       },
       eventName: "push",
-      sha: "the_event_sha",
+      payload: {
+        pull_request: {
+          head: {
+            sha: "the_head_sha",
+          },
+        },
+      },
     },
     getOctokit: vi.fn(() => ({
       rest: {

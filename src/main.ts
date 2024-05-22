@@ -10,17 +10,18 @@ import findArtifact from "./services/github/findArtifact.js";
 import downloadArtifact from "./services/github/downloadArtifact.js";
 import core from "@actions/core";
 import findPr from "./services/github/findPr.js";
+import { HEAD_SHA } from "./services/github/constants.js";
 
 export default async function main() {
   const artifact = new DefaultArtifactClient();
   const pr = await findPr();
-  const eventSha = github.context.sha;
+  const eventSha = HEAD_SHA;
   const baseSha = pr?.base.sha;
   const inputs = getInputs();
   const includeRegex = new RegExp(inputs.include);
   const workspace = process.env.GITHUB_WORKSPACE;
 
-  console.log({ baseSha, eventSha, workspace });
+  console.log({ pr, baseSha, eventSha, workspace });
 
   if (!workspace) {
     throw new Error("GITHUB_WORKSPACE not set");

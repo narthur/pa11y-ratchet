@@ -14,14 +14,6 @@ vi.mock("@actions/github", () => ({
       },
       eventName: "push",
       sha: "the_event_sha",
-      payload: {
-        pull_request: {
-          number: 1,
-          base: {
-            sha: "the_base_sha",
-          },
-        },
-      },
     },
     getOctokit: vi.fn(() => ({
       rest: {
@@ -52,8 +44,14 @@ vi.mock("./src/lib/readCsv.js", () => ({
   default: vi.fn(() => Promise.resolve([])),
 }));
 vi.mock("./src/lib/writeCsv.js");
-vi.mock("./src/services/artifacts/downloadArtifact.js");
-vi.mock("./src/services/artifacts/findArtifact.js");
+vi.mock("./src/services/github/downloadArtifact.js");
+vi.mock("./src/services/github/findArtifact.js");
+
+vi.mock("./src/services/github/findPr.js", () => ({
+  default: vi.fn(() =>
+    Promise.resolve({ number: 1, base: { sha: "the_base_sha" } })
+  ),
+}));
 
 vi.mock("fast-csv", () => ({
   format: vi.fn(() => ({

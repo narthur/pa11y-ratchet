@@ -1,4 +1,4 @@
-import octokit from "../octokit.js";
+import octokit from "./octokit.js";
 import exec from "@actions/exec";
 
 type Options = {

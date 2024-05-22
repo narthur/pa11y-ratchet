@@ -1,4 +1,4 @@
-import octokit from "../octokit.js";
+import octokit from "./octokit.js";
 import github from "@actions/github";
 
 export default async function findArtifact(sha: string) {

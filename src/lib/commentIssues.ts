@@ -1,5 +1,6 @@
 import github from "@actions/github";
-import octokit from "../services/octokit.js";
+import octokit from "../services/github/octokit.js";
+import findPr from "../services/github/findPr.js";
 
 const BODY_PREFIX = "<!-- pa11y summary -->";
 
@@ -37,7 +38,8 @@ export default async function commentIssues(issues: {
   fixed: Record<string, unknown>[];
   retained: Record<string, unknown>[];
 }) {
-  const issue_number = github.context.payload.pull_request?.number;
+  const pr = await findPr();
+  const issue_number = pr?.number;
 
   if (!issue_number) {
     throw new Error("No issue number found in the context");

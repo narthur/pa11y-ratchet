@@ -6,14 +6,16 @@ import github from "@actions/github";
 import getInputs from "./lib/getInputs.js";
 import commentIssues from "./lib/commentIssues.js";
 import compareIssues from "./lib/compareIssues.js";
-import findArtifact from "./services/artifacts/findArtifact.js";
-import downloadArtifact from "./services/artifacts/downloadArtifact.js";
+import findArtifact from "./services/github/findArtifact.js";
+import downloadArtifact from "./services/github/downloadArtifact.js";
 import core from "@actions/core";
+import findPr from "./services/github/findPr.js";
 
 export default async function main() {
   const artifact = new DefaultArtifactClient();
+  const pr = await findPr();
   const eventSha = github.context.sha;
-  const baseSha = github.context.payload.pull_request?.base.sha;
+  const baseSha = pr?.base.sha;
   const inputs = getInputs();
   const includeRegex = new RegExp(inputs.include);
   const workspace = process.env.GITHUB_WORKSPACE;

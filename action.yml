@@ -16,9 +16,14 @@ inputs:
   include:
     description: "Only include URLs that match this regular expression"
     required: false
-outputs:
-  pa11y-output:
-    description: "The Pa11y output"
 runs:
-  using: "node20"
-  main: "index.js"
+  using: "composite"
+  steps:
+    - uses: actions/setup-node@v4
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 9
+    - run: pnpm install --prod
+      shell: bash
+    - run: node ./dist/index.js
+      shell: bash

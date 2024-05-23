@@ -12,9 +12,11 @@ export default async function scanUrls(urls: string[]): Promise<
   }[]
 > {
   const issues = [];
+  const len = urls.length;
 
-  for (const url of urls) {
-    console.time(url);
+  for (const [i, url] of urls.entries()) {
+    const key = `${i + 1}/${len}: ${url}`;
+    console.time(key);
     const res = await pa11y(url).catch((err) => {
       console.error(err);
       return {
@@ -33,7 +35,7 @@ export default async function scanUrls(urls: string[]): Promise<
     });
     const issuesForUrl = res.issues.map((issue) => ({ url, ...issue }));
     issues.push(...issuesForUrl);
-    console.timeEnd(url);
+    console.timeEnd(key);
   }
 
   return issues;

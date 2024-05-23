@@ -6,10 +6,14 @@ export default async function readCsv(
   const rows: Record<string, unknown>[] = [];
 
   return new Promise((resolve, reject) => {
-    csv
-      .parseFile(path, { headers: true })
-      .on("error", (error) => reject(error))
-      .on("data", (row) => rows.push(row))
-      .on("end", () => resolve(rows));
+    try {
+      csv
+        .parseFile(path, { headers: true })
+        .on("error", (error) => reject(error))
+        .on("data", (row) => rows.push(row))
+        .on("end", () => resolve(rows));
+    } catch (error) {
+      reject(error);
+    }
   });
 }

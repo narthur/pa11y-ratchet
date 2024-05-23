@@ -1,7 +1,10 @@
 import downloadBaseArtifact from "./downloadBaseArtifact.js";
 import readCsv from "./readCsv.js";
+import { Issue } from "./scanUrls.js";
 
-export default async function retrieveIssues(sha: string) {
+export default async function retrieveIssues(
+  sha: string
+): Promise<Issue[] | undefined> {
   const workspace = process.env.GITHUB_WORKSPACE;
 
   if (!workspace) {
@@ -10,7 +13,7 @@ export default async function retrieveIssues(sha: string) {
 
   await downloadBaseArtifact();
 
-  return readCsv(`${workspace}/pa11y-${sha}.csv`).catch((error) => {
+  return readCsv<Issue>(`${workspace}/pa11y-${sha}.csv`).catch((error) => {
     console.error(`Error reading base CSV file: ${error}`);
     return undefined;
   });

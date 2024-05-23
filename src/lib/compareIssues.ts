@@ -1,7 +1,21 @@
+import { Issue } from "./scanUrls.js";
+
 type Options = {
-  baseIssues: Record<string, unknown>[];
-  headIssues: Record<string, unknown>[];
+  baseIssues: Issue[];
+  headIssues: Issue[];
 };
+
+function areEqual(a: Issue, b: Issue) {
+  return (
+    a.code === b.code &&
+    a.context === b.context &&
+    a.message === b.message &&
+    a.selector === b.selector &&
+    a.type === b.type &&
+    a.typeCode === b.typeCode &&
+    a.url === b.url
+  );
+}
 
 export default async function compareIssues({
   baseIssues,
@@ -14,20 +28,14 @@ export default async function compareIssues({
   return {
     new: headIssues.filter(
       (headIssue) =>
-        !baseIssues.some(
-          (baseIssue) => JSON.stringify(baseIssue) === JSON.stringify(headIssue)
-        )
+        !baseIssues.some((baseIssue) => areEqual(baseIssue, headIssue))
     ),
     fixed: baseIssues.filter(
       (baseIssue) =>
-        !headIssues.some(
-          (headIssue) => JSON.stringify(baseIssue) === JSON.stringify(headIssue)
-        )
+        !headIssues.some((headIssue) => areEqual(baseIssue, headIssue))
     ),
     retained: baseIssues.filter((baseIssue) =>
-      headIssues.some(
-        (headIssue) => JSON.stringify(baseIssue) === JSON.stringify(headIssue)
-      )
+      headIssues.some((headIssue) => areEqual(baseIssue, headIssue))
     ),
   };
 }

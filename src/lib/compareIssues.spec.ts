@@ -6,7 +6,7 @@ describe("compareIssues", () => {
     const result = await compareIssues({
       headIssues: [{ context: "new" }],
       baseIssues: [],
-    });
+    } as any);
 
     expect(result.new).toHaveLength(1);
   });
@@ -15,7 +15,7 @@ describe("compareIssues", () => {
     const result = await compareIssues({
       headIssues: [],
       baseIssues: [{ context: "fixed" }],
-    });
+    } as any);
 
     expect(result.fixed).toHaveLength(1);
   });
@@ -24,7 +24,7 @@ describe("compareIssues", () => {
     const result = await compareIssues({
       headIssues: [{ context: "retained" }],
       baseIssues: [{ context: "retained" }],
-    });
+    } as any);
 
     expect(result.retained).toHaveLength(1);
   });

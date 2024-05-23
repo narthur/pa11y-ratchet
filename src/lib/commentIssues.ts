@@ -1,7 +1,6 @@
 import { Issue } from "./scanUrls.js";
 import upsertComment from "../services/github/upsertComment.js";
 import Mustache from "mustache";
-import { readFileSync } from "fs";
 
 type SectionData = {
   title: string;
@@ -15,10 +14,22 @@ type SectionData = {
   }[];
 };
 
-const template = readFileSync(
-  "./src/templates/commentSection.md.mustache",
-  "utf8"
-);
+const template = `
+### {{title}}
+
+{{#issues}}
+#### {{code}} ({{pages.length}} pages)
+
+> {{message}}
+
+{{#pages}}
+- [{{url}}]({{url}}) ({{instances.length}} instances)
+{{#instances}}
+  - \`{{{selector}}}\`
+{{/instances}}
+{{/pages}}
+{{/issues}}
+`;
 
 function renderSection(data: SectionData): string {
   return Mustache.render(template, data);

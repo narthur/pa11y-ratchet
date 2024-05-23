@@ -77,6 +77,7 @@ vi.mock("fs", () => ({
   })),
   existsSync: vi.fn(() => false),
   unlinkSync: vi.fn(),
+  readFileSync: vi.fn(() => ""),
 }));
 
 vi.mock("node-fetch", () => ({

@@ -1,3 +1,4 @@
+import { readFile, readFileSync } from "fs";
 import { vi } from "vitest";
 
 vi.stubEnv("GITHUB_WORKSPACE", "/github/workspace");
@@ -77,6 +78,7 @@ vi.mock("fs", () => ({
   })),
   existsSync: vi.fn(() => false),
   unlinkSync: vi.fn(),
+  readFileSync: vi.fn(() => ""),
 }));
 
 vi.mock("node-fetch", () => ({

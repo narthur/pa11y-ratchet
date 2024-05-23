@@ -1,4 +1,3 @@
-import pa11y from "pa11y";
 import getUrls from "./lib/getUrls.js";
 import writeCsv from "./lib/writeCsv.js";
 import { DefaultArtifactClient } from "@actions/artifact";
@@ -12,6 +11,7 @@ import core from "@actions/core";
 import findPr from "./services/github/findPr.js";
 import { HEAD_SHA } from "./services/github/constants.js";
 import scanUrls from "./lib/scanUrls.js";
+import downloadBaseArtifact from "./lib/downloadBaseArtifact.js";
 
 export default async function main() {
   const artifact = new DefaultArtifactClient();
@@ -44,22 +44,7 @@ export default async function main() {
 
   await artifact.uploadArtifact(`pa11y-ratchet-${eventSha}`, [outname], outdir);
 
-  const baseArtifact = await findArtifact(baseSha);
-
-  if (!baseArtifact) {
-    console.log("No base artifact found, skipping comparison");
-    console.log("baseSha", baseSha);
-    return;
-  }
-
-  console.log("Downloading base artifact", baseArtifact.id, baseArtifact.name);
-
-  await downloadArtifact({
-    artifactId: baseArtifact.id,
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
-    outdir,
-  });
+  await downloadBaseArtifact();
 
   const comparison = await compareIssues(
     `${workspace}/pa11y-${baseSha}.csv`,

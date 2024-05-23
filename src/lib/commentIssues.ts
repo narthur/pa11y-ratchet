@@ -3,6 +3,8 @@ import upsertComment from "../services/github/upsertComment.js";
 import Mustache from "mustache";
 import { readFileSync } from "fs";
 
+const __dirname = new URL(".", import.meta.url).pathname;
+
 type SectionData = {
   title: string;
   issues: {
@@ -16,7 +18,7 @@ type SectionData = {
 };
 
 const template = readFileSync(
-  "./src/templates/commentSection.md.mustache",
+  `${__dirname}/../templates/commentSection.md.mustache`,
   "utf8"
 );
 

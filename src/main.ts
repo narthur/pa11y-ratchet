@@ -11,6 +11,7 @@ import downloadArtifact from "./services/github/downloadArtifact.js";
 import core from "@actions/core";
 import findPr from "./services/github/findPr.js";
 import { HEAD_SHA } from "./services/github/constants.js";
+import scanUrls from "./lib/scanUrls.js";
 
 export default async function main() {
   const artifact = new DefaultArtifactClient();
@@ -37,13 +38,7 @@ export default async function main() {
       .map((url: string) => url.replace(inputs.find, inputs.replace))
   );
 
-  const issues = [];
-
-  for (const url of urls) {
-    const res = await pa11y(url);
-    const issuesForUrl = res.issues.map((issue) => ({ url, ...issue }));
-    issues.push(...issuesForUrl);
-  }
+  const issues = await scanUrls(urls);
 
   await writeCsv(outpath, issues);
 

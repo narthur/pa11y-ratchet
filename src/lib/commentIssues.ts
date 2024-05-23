@@ -1,37 +1,60 @@
-import github from "@actions/github";
-import octokit from "../services/github/octokit.js";
-import findPr from "../services/github/findPr.js";
 import { Issue } from "./scanUrls.js";
+import upsertComment from "../services/github/upsertComment.js";
+import Mustache from "mustache";
+import { readFileSync } from "fs";
 
-const BODY_PREFIX = "<!-- pa11y summary -->";
+type SectionData = {
+  title: string;
+  issues: {
+    code: string;
+    message: string;
+    pages: {
+      url: string;
+      instances: Issue[];
+    }[];
+  }[];
+};
 
-function escapeHtml(text: string) {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+const template = readFileSync(
+  "./src/templates/commentSection.md.mustache",
+  "utf8"
+);
+
+function renderSection(data: SectionData): string {
+  return Mustache.render(template, data);
 }
 
-function issue(data: Issue) {
-  return `
-<p><strong>${data.type}: ${data.code}</strong></p>
-<p><a href="${data.url}">${data.url}</a></p>
-<blockquote>${data.message}</blockquote>
-<p><code>${data.selector}</code></p>
-${
-  data.context
-    ? `<div><pre><code>${escapeHtml(
-        String(data.context).replaceAll("><", ">\n<")
-      )}</code></pre></div>`
-    : ``
-}
-`;
-}
+function prepareData(title: string, issues: Issue[]): SectionData {
+  const issuesByCode = issues.reduce<Record<string, SectionData["issues"][0]>>(
+    (acc, issue) => {
+      if (!acc[issue.code]) {
+        acc[issue.code] = {
+          code: issue.code,
+          message: issue.message,
+          pages: [],
+        };
+      }
 
-function issuesList(issues: Issue[]) {
-  return `${issues.map(issue).join("<hr/>")}`;
+      const page = acc[issue.code].pages.find((p) => p.url === issue.url);
+
+      if (page) {
+        page.instances.push(issue);
+      } else {
+        acc[issue.code].pages.push({
+          url: issue.url,
+          instances: [issue],
+        });
+      }
+
+      return acc;
+    },
+    {}
+  );
+
+  return {
+    title,
+    issues: Object.values(issuesByCode),
+  };
 }
 
 export default async function commentIssues(issues: {
@@ -39,73 +62,19 @@ export default async function commentIssues(issues: {
   fixed: Issue[];
   retained: Issue[];
 }) {
-  const pr = await findPr();
-  const issue_number = pr?.number;
+  let body = "";
 
-  if (!issue_number) {
-    throw new Error("No issue number found in the context");
+  if (issues.new.length) {
+    body += renderSection(prepareData("🚨 New Issues", issues.new));
   }
 
-  const body = `${BODY_PREFIX}
-  ${
-    !issues.new.length && !issues.fixed.length && !issues.retained.length
-      ? "🎉 Pa11y found no accessibility issues!"
-      : "Pa11y found the following accessibility issues:"
+  if (issues.fixed.length) {
+    body += renderSection(prepareData("🎉 Fixed issues", issues.fixed));
   }
-  
-${
-  issues.new.length
-    ? `  ### 🚨 New Issues (${issues.new.length})
 
-${issuesList(issues.new)}`
-    : ""
-}
-
-${
-  issues.fixed.length
-    ? `  ### 🎉 Fixed Issues (${issues.fixed.length})
-
-  ${issuesList(issues.fixed)}`
-    : ""
-}
-
-${
-  issues.retained.length
-    ? ` 
-
-  <details>
-  <summary><h3>⚠️ Retained Issues (${issues.retained.length})</h3></summary>
-  
-  ${issuesList(issues.retained)}
-
-  </details> `
-    : ""
-}
-  `;
-
-  const { data: comments } = await octokit.rest.issues.listComments({
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
-    issue_number,
-  });
-
-  const existingComment = comments.find(({ body }) =>
-    body?.startsWith(BODY_PREFIX)
-  );
-
-  if (existingComment) {
-    await octokit.rest.issues.updateComment({
-      body,
-      owner: github.context.repo.owner,
-      repo: github.context.repo.repo,
-      comment_id: existingComment.id,
-    });
-  } else {
-    await octokit.rest.issues.createComment({
-      body,
-      owner: github.context.repo.owner,
-      repo: github.context.repo.repo,
-      issue_number,
-    });
+  if (issues.retained.length) {
+    body += renderSection(prepareData("⚠️ Retained issues", issues.retained));
   }
+
+  await upsertComment(body);
 }

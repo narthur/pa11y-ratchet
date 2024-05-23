@@ -1,0 +1,14 @@
+### {{title}} ({{issueCount}} issues)
+
+{{#issues}}
+#### {{code}} ({{pages.length}} pages)
+
+> {{message}}
+
+{{#pages}}
+- [{{url}}]({{url}}) ({{instances.length}} instances)
+{{#instances}}
+  - `{{selector}}`
+{{/instances}}
+{{/pages}}
+{{/issues}}

@@ -1,6 +1,6 @@
 {
   "name": "pa11y-ratchet",
-  "version": "2.6.2",
+  "version": "2.7.0",
   "description": "",
   "main": "index.js",
   "type": "module",
@@ -15,6 +15,7 @@
   "license": "ISC",
   "devDependencies": {
     "@eslint/js": "^9.2.0",
+    "@types/mustache": "^4.2.5",
     "@types/node": "^20.12.12",
     "@types/pa11y": "^5.3.7",
     "@types/xml2js": "^0.4.14",
@@ -32,6 +33,7 @@
     "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.0",
     "fast-csv": "^5.0.1",
+    "mustache": "^4.2.0",
     "node-fetch": "^3.3.2",
     "pa11y": "^8.0.0",
     "remove": "^0.1.5",

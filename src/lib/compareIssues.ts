@@ -8,7 +8,10 @@ export default async function compareIssues(
   fixed: Record<string, unknown>[];
   retained: Record<string, unknown>[];
 }> {
-  const baseIssues = await readCsv(baseCsvPath);
+  const baseIssues = await readCsv(baseCsvPath).catch((error) => {
+    console.error(`Error reading base CSV file: ${error}`);
+    return [];
+  });
   const eventIssues = await readCsv(eventCsvPath);
 
   return {

@@ -1,6 +1,7 @@
 import github from "@actions/github";
 import octokit from "../services/github/octokit.js";
 import findPr from "../services/github/findPr.js";
+import { Issue } from "./scanUrls.js";
 
 const BODY_PREFIX = "<!-- pa11y summary -->";
 
@@ -13,7 +14,7 @@ function escapeHtml(text: string) {
     .replace(/'/g, "&#039;");
 }
 
-function issue(data: Record<string, unknown>) {
+function issue(data: Issue) {
   return `
 <p><strong>${data.type}: ${data.code}</strong></p>
 <p><a href="${data.url}">${data.url}</a></p>
@@ -29,14 +30,14 @@ ${
 `;
 }
 
-function issuesList(issues: Record<string, unknown>[]) {
+function issuesList(issues: Issue[]) {
   return `${issues.map(issue).join("<hr/>")}`;
 }
 
 export default async function commentIssues(issues: {
-  new: Record<string, unknown>[];
-  fixed: Record<string, unknown>[];
-  retained: Record<string, unknown>[];
+  new: Issue[];
+  fixed: Issue[];
+  retained: Issue[];
 }) {
   const pr = await findPr();
   const issue_number = pr?.number;

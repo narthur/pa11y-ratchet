@@ -59,12 +59,10 @@ describe("main", () => {
   });
 
   it("sets failed status if new issues found", async () => {
-    vi.mocked(readCsv).mockImplementation((path: string) => {
-      if (path.includes("the_base_sha")) {
-        return Promise.resolve([]);
-      }
-      return Promise.resolve([{}]);
-    });
+    vi.mocked(pa11y).mockResolvedValue({
+      issues: [{ message: "the_error_message" }],
+    } as any);
+    vi.mocked(readCsv).mockResolvedValue([]);
 
     await main();
 

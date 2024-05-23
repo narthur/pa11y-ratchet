@@ -1,6 +1,4 @@
 import getUrls from "./lib/getUrls.js";
-import writeCsv from "./lib/writeCsv.js";
-import { DefaultArtifactClient } from "@actions/artifact";
 import getInputs from "./lib/getInputs.js";
 import commentIssues from "./lib/commentIssues.js";
 import compareIssues from "./lib/compareIssues.js";
@@ -8,26 +6,22 @@ import core from "@actions/core";
 import findPr from "./services/github/findPr.js";
 import { HEAD_SHA } from "./services/github/constants.js";
 import scanUrls from "./lib/scanUrls.js";
-import downloadBaseArtifact from "./lib/downloadBaseArtifact.js";
+import uploadIssues from "./lib/uploadIssues.js";
+import retrieveIssues from "./lib/retrieveIssues.js";
 
 export default async function main() {
-  const artifact = new DefaultArtifactClient();
   const pr = await findPr();
-  const eventSha = HEAD_SHA;
   const baseSha = pr?.base.sha;
+  const headSha = HEAD_SHA;
   const inputs = getInputs();
   const includeRegex = new RegExp(inputs.include);
   const workspace = process.env.GITHUB_WORKSPACE;
 
-  console.log({ baseSha, eventSha, workspace });
+  console.log({ baseSha, headSha, workspace });
 
   if (!workspace) {
     throw new Error("GITHUB_WORKSPACE not set");
   }
-
-  const outdir = workspace;
-  const outname = `pa11y-${eventSha}.csv`;
-  const outpath = `${outdir}/${outname}`;
 
   const urls = await getUrls(inputs.sitemapUrl).then((urls: string[]) =>
     urls
@@ -35,18 +29,12 @@ export default async function main() {
       .map((url: string) => url.replace(inputs.find, inputs.replace))
   );
 
-  const issues = await scanUrls(urls);
+  const headIssues = await scanUrls(urls);
 
-  await writeCsv(outpath, issues);
+  await uploadIssues(headIssues, headSha);
 
-  await artifact.uploadArtifact(`pa11y-ratchet-${eventSha}`, [outname], outdir);
-
-  await downloadBaseArtifact();
-
-  const comparison = await compareIssues(
-    `${workspace}/pa11y-${baseSha}.csv`,
-    outpath
-  );
+  const baseIssues = (await retrieveIssues(baseSha)) || [];
+  const comparison = await compareIssues({ baseIssues, headIssues });
 
   console.log("Comparing issues and commenting on PR");
   await commentIssues(comparison);

@@ -1,37 +1,32 @@
-import readCsv from "./readCsv.js";
+type Options = {
+  baseIssues: Record<string, unknown>[];
+  headIssues: Record<string, unknown>[];
+};
 
-export default async function compareIssues(
-  baseCsvPath: string,
-  eventCsvPath: string
-): Promise<{
+export default async function compareIssues({
+  baseIssues,
+  headIssues,
+}: Options): Promise<{
   new: Record<string, unknown>[];
   fixed: Record<string, unknown>[];
   retained: Record<string, unknown>[];
 }> {
-  const baseIssues = await readCsv(baseCsvPath).catch((error) => {
-    console.error(`Error reading base CSV file: ${error}`);
-    return [];
-  });
-  const eventIssues = await readCsv(eventCsvPath);
-
   return {
-    new: eventIssues.filter(
-      (eventIssue) =>
+    new: headIssues.filter(
+      (headIssue) =>
         !baseIssues.some(
-          (baseIssue) =>
-            JSON.stringify(baseIssue) === JSON.stringify(eventIssue)
+          (baseIssue) => JSON.stringify(baseIssue) === JSON.stringify(headIssue)
         )
     ),
     fixed: baseIssues.filter(
       (baseIssue) =>
-        !eventIssues.some(
-          (eventIssue) =>
-            JSON.stringify(baseIssue) === JSON.stringify(eventIssue)
+        !headIssues.some(
+          (headIssue) => JSON.stringify(baseIssue) === JSON.stringify(headIssue)
         )
     ),
     retained: baseIssues.filter((baseIssue) =>
-      eventIssues.some(
-        (eventIssue) => JSON.stringify(baseIssue) === JSON.stringify(eventIssue)
+      headIssues.some(
+        (headIssue) => JSON.stringify(baseIssue) === JSON.stringify(headIssue)
       )
     ),
   };

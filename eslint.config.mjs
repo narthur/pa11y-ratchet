@@ -7,6 +7,9 @@ export default [
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    ignores: ["index.js"],
+  },
+  {
     files: ["**/*.spec.ts"],
     rules: { "@typescript-eslint/no-explicit-any": "off" },
   },

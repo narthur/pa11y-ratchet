@@ -10,22 +10,16 @@ function eq(a: Issue, b: Issue) {
 }
 
 export default async function compareIssues({
-  baseIssues,
-  headIssues,
+  baseIssues: base,
+  headIssues: head,
 }: Options): Promise<{
-  new: Record<string, unknown>[];
-  fixed: Record<string, unknown>[];
-  retained: Record<string, unknown>[];
+  new: Issue[];
+  fixed: Issue[];
+  retained: Issue[];
 }> {
   return {
-    new: headIssues.filter(
-      (headIssue) => !baseIssues.some((baseIssue) => eq(baseIssue, headIssue))
-    ),
-    fixed: baseIssues.filter(
-      (baseIssue) => !headIssues.some((headIssue) => eq(baseIssue, headIssue))
-    ),
-    retained: baseIssues.filter((baseIssue) =>
-      headIssues.some((headIssue) => eq(baseIssue, headIssue))
-    ),
+    new: head.filter((hi) => !base.some((bi) => eq(bi, hi))),
+    fixed: base.filter((bi) => !head.some((hi) => eq(bi, hi))),
+    retained: base.filter((bi) => head.some((hi) => eq(bi, hi))),
   };
 }

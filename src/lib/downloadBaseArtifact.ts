@@ -3,7 +3,7 @@ import findArtifact from "../services/github/findArtifact.js";
 import findPr from "../services/github/findPr.js";
 import github from "@actions/github";
 
-export default async function downloadBaseArtifact(): Promise<void> {
+export default async function downloadBaseArtifact(): Promise<boolean> {
   const pr = await findPr();
   const baseSha = pr?.base.sha;
 
@@ -12,7 +12,7 @@ export default async function downloadBaseArtifact(): Promise<void> {
   if (!baseArtifact) {
     console.warn("No base artifact found");
     console.log("baseSha", baseSha);
-    return;
+    return false;
   }
 
   console.log("Downloading base artifact", baseArtifact.id, baseArtifact.name);
@@ -23,4 +23,6 @@ export default async function downloadBaseArtifact(): Promise<void> {
     repo: github.context.repo.repo,
     outdir: process.env.GITHUB_WORKSPACE || "",
   });
+
+  return true;
 }

@@ -8,7 +8,7 @@ describe("commentIssues", () => {
       new: [{ context: "new" }],
       fixed: [{ context: "fixed" }],
       retained: [{ context: "retained" }],
-    });
+    } as any);
 
     expect(octokit.rest.issues.createComment).toHaveBeenCalled();
   });

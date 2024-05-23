@@ -1,4 +1,3 @@
-import { readFile, readFileSync } from "fs";
 import { vi } from "vitest";
 
 vi.stubEnv("GITHUB_WORKSPACE", "/github/workspace");

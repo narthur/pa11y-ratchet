@@ -1,9 +1,9 @@
 import * as csv from "fast-csv";
 
-export default async function readCsv(
+export default async function readCsv<T extends Record<string, unknown>>(
   path: string
-): Promise<Record<string, unknown>[]> {
-  const rows: Record<string, unknown>[] = [];
+): Promise<T[]> {
+  const rows: T[] = [];
 
   return new Promise((resolve, reject) => {
     try {

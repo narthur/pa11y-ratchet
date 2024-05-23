@@ -1,16 +1,16 @@
 import pa11y from "pa11y";
 
-export default async function scanUrls(urls: string[]): Promise<
-  {
-    code: string;
-    context: string;
-    message: string;
-    selector: string;
-    type: string;
-    typeCode: number;
-    url: string;
-  }[]
-> {
+export type Issue = {
+  code: string;
+  context: string;
+  message: string;
+  selector: string;
+  type: string;
+  typeCode: number;
+  url: string;
+};
+
+export default async function scanUrls(urls: string[]): Promise<Issue[]> {
   const issues = [];
   const len = urls.length;
 

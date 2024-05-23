@@ -1,38 +1,31 @@
-import readCsv from "./readCsv.js";
+import { Issue } from "./scanUrls.js";
 
-export default async function compareIssues(
-  baseCsvPath: string,
-  eventCsvPath: string
-): Promise<{
+type Options = {
+  baseIssues: Issue[];
+  headIssues: Issue[];
+};
+
+function eq(a: Issue, b: Issue) {
+  return a.code === b.code && a.selector === b.selector && a.url === b.url;
+}
+
+export default async function compareIssues({
+  baseIssues,
+  headIssues,
+}: Options): Promise<{
   new: Record<string, unknown>[];
   fixed: Record<string, unknown>[];
   retained: Record<string, unknown>[];
 }> {
-  const baseIssues = await readCsv(baseCsvPath).catch((error) => {
-    console.error(`Error reading base CSV file: ${error}`);
-    return [];
-  });
-  const eventIssues = await readCsv(eventCsvPath);
-
   return {
-    new: eventIssues.filter(
-      (eventIssue) =>
-        !baseIssues.some(
-          (baseIssue) =>
-            JSON.stringify(baseIssue) === JSON.stringify(eventIssue)
-        )
+    new: headIssues.filter(
+      (headIssue) => !baseIssues.some((baseIssue) => eq(baseIssue, headIssue))
     ),
     fixed: baseIssues.filter(
-      (baseIssue) =>
-        !eventIssues.some(
-          (eventIssue) =>
-            JSON.stringify(baseIssue) === JSON.stringify(eventIssue)
-        )
+      (baseIssue) => !headIssues.some((headIssue) => eq(baseIssue, headIssue))
     ),
     retained: baseIssues.filter((baseIssue) =>
-      eventIssues.some(
-        (eventIssue) => JSON.stringify(baseIssue) === JSON.stringify(eventIssue)
-      )
+      headIssues.some((headIssue) => eq(baseIssue, headIssue))
     ),
   };
 }

@@ -11,7 +11,11 @@ export default async function retrieveIssues(
     throw new Error("GITHUB_WORKSPACE not set");
   }
 
-  await downloadBaseArtifact();
+  const success = await downloadBaseArtifact();
+
+  if (!success) {
+    return undefined;
+  }
 
   return readCsv<Issue>(`${workspace}/pa11y-${sha}.csv`).catch((error) => {
     console.error(`Error reading base CSV file: ${error}`);

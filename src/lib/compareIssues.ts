@@ -5,16 +5,8 @@ type Options = {
   headIssues: Issue[];
 };
 
-function areEqual(a: Issue, b: Issue) {
-  return (
-    a.code === b.code &&
-    a.context === b.context &&
-    a.message === b.message &&
-    a.selector === b.selector &&
-    a.type === b.type &&
-    a.typeCode === b.typeCode &&
-    a.url === b.url
-  );
+function eq(a: Issue, b: Issue) {
+  return a.code === b.code && a.selector === b.selector && a.url === b.url;
 }
 
 export default async function compareIssues({
@@ -27,15 +19,13 @@ export default async function compareIssues({
 }> {
   return {
     new: headIssues.filter(
-      (headIssue) =>
-        !baseIssues.some((baseIssue) => areEqual(baseIssue, headIssue))
+      (headIssue) => !baseIssues.some((baseIssue) => eq(baseIssue, headIssue))
     ),
     fixed: baseIssues.filter(
-      (baseIssue) =>
-        !headIssues.some((headIssue) => areEqual(baseIssue, headIssue))
+      (baseIssue) => !headIssues.some((headIssue) => eq(baseIssue, headIssue))
     ),
     retained: baseIssues.filter((baseIssue) =>
-      headIssues.some((headIssue) => areEqual(baseIssue, headIssue))
+      headIssues.some((headIssue) => eq(baseIssue, headIssue))
     ),
   };
 }

@@ -12,10 +12,10 @@ type SectionData = {
 };
 
 const template = `
-Code | New | Fixed | Retained
----- | --- | ----- | --------
+Code | N:F:R
+---- | -----
 {{#codes}}
-{{code}} | {{newCount}} | {{fixedCount}} | {{retainedCount}}
+{{code}} | {{newCount}}:{{fixedCount}}:{{retainedCount}}
 {{/codes}}
 `;
 

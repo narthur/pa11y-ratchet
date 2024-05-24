@@ -3,46 +3,20 @@ import upsertComment from "../services/github/upsertComment.js";
 import Mustache from "mustache";
 
 type SectionData = {
-  title: string;
-  issueCount: number;
-  issues: {
+  codes: {
     code: string;
-    message: string;
-    pages: {
-      url: string;
-      instances: Issue[];
-      remaining: number;
-    }[];
-    remaining: number;
+    newCount: number;
+    fixedCount: number;
+    retainedCount: number;
   }[];
-  remaining: number;
 };
 
 const template = `
-### {{title}} ({{issueCount}} issues)
-
-{{#issues}}
-#### {{code}}
-
-> {{message}}
-
-{{#pages}}
-- [{{url}}]({{url}})
-{{#instances}}
-  - \`{{{selector}}}\`
-{{/instances}}
-{{#remaining}}
-  - ... and {{remaining}} more
-{{/remaining}}
-{{/pages}}
-{{#remaining}}
-- ... and {{remaining}} more
-{{/remaining}}
-{{/issues}}
-{{#remaining}}
-
-... and {{remaining}} more
-{{/remaining}}
+Code | New | Fixed | Retained
+---- | --- | ----- | --------
+{{#codes}}
+{{code}} | {{newCount}} | {{fixedCount}} | {{retainedCount}}
+{{/codes}}
 `;
 
 function renderSection(data: SectionData): string {
@@ -50,46 +24,31 @@ function renderSection(data: SectionData): string {
 }
 
 function prepareData(title: string, issues: Issue[]): SectionData {
-  const issuesByCode = issues.reduce((acc, issue) => {
-    if (!acc[issue.code]) {
-      acc[issue.code] = [];
+  const codes = issues.reduce<SectionData["codes"]>((acc, issue) => {
+    const existing = acc.find((x) => x.code === issue.code);
+
+    if (existing) {
+      if (issue.context === "new") {
+        existing.newCount++;
+      } else if (issue.context === "fixed") {
+        existing.fixedCount++;
+      } else if (issue.context === "retained") {
+        existing.retainedCount++;
+      }
+    } else {
+      acc.push({
+        code: issue.code,
+        newCount: issue.context === "new" ? 1 : 0,
+        fixedCount: issue.context === "fixed" ? 1 : 0,
+        retainedCount: issue.context === "retained" ? 1 : 0,
+      });
     }
 
-    acc[issue.code].push(issue);
     return acc;
-  }, {} as Record<string, Issue[]>);
-
-  const issuesData = Object.entries(issuesByCode)
-    .slice(0, 3)
-    .map(([code, instances]) => {
-      const pages = instances.reduce((acc, instance) => {
-        if (!acc[instance.url]) {
-          acc[instance.url] = [];
-        }
-
-        acc[instance.url].push(instance);
-        return acc;
-      }, {} as Record<string, Issue[]>);
-
-      return {
-        code,
-        message: instances[0].message,
-        pages: Object.entries(pages)
-          .slice(0, 3)
-          .map(([url, instances]) => ({
-            url,
-            instances: instances.slice(0, 3),
-            remaining: Math.max(0, instances.length - 3),
-          })),
-        remaining: Math.max(0, instances.length - 3),
-      };
-    });
+  }, []);
 
   return {
-    title,
-    issueCount: issues.length,
-    issues: issuesData,
-    remaining: Math.max(0, issues.length - 3),
+    codes,
   };
 }
 
@@ -101,20 +60,22 @@ export default async function commentIssues(
   },
   artifact: { data: { archive_download_url: string } }
 ) {
-  let body =
-    "[Download full report](" + artifact.data.archive_download_url + ")\n\n";
+  // let body =
+  //   "[Download full report](" + artifact.data.archive_download_url + ")\n\n";
 
-  if (issues.new.length) {
-    body += renderSection(prepareData("🚨 New Issues", issues.new));
-  }
+  // if (issues.new.length) {
+  //   body += renderSection(prepareData("🚨 New Issues", issues.new));
+  // }
 
-  if (issues.fixed.length) {
-    body += renderSection(prepareData("🎉 Fixed issues", issues.fixed));
-  }
+  // if (issues.fixed.length) {
+  //   body += renderSection(prepareData("🎉 Fixed issues", issues.fixed));
+  // }
 
-  if (issues.retained.length) {
-    body += renderSection(prepareData("⚠️ Retained issues", issues.retained));
-  }
+  // if (issues.retained.length) {
+  //   body += renderSection(prepareData("⚠️ Retained issues", issues.retained));
+  // }
+
+  const body = renderSection(prepareData("Summary", issues.new));
 
   await upsertComment(body);
 }

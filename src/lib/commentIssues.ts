@@ -4,31 +4,45 @@ import Mustache from "mustache";
 
 type SectionData = {
   title: string;
+  issueCount: number;
   issues: {
     code: string;
     message: string;
     pages: {
       url: string;
       instances: Issue[];
+      remaining: number;
     }[];
+    remaining: number;
   }[];
+  remaining: number;
 };
 
 const template = `
-### {{title}}
+### {{title}} ({{issueCount}} issues)
 
 {{#issues}}
-#### {{code}} ({{pages.length}} pages)
+#### {{code}}
 
 > {{message}}
 
 {{#pages}}
-- [{{url}}]({{url}}) ({{instances.length}} instances)
+- [{{url}}]({{url}})
 {{#instances}}
   - \`{{{selector}}}\`
 {{/instances}}
+{{#remaining}}
+  - ... and {{remaining}} more
+{{/remaining}}
 {{/pages}}
+{{#remaining}}
+- ... and {{remaining}} more
+{{/remaining}}
 {{/issues}}
+{{#remaining}}
+
+... and {{remaining}} more
+{{/remaining}}
 `;
 
 function renderSection(data: SectionData): string {
@@ -36,35 +50,46 @@ function renderSection(data: SectionData): string {
 }
 
 function prepareData(title: string, issues: Issue[]): SectionData {
-  const issuesByCode = issues.reduce<Record<string, SectionData["issues"][0]>>(
-    (acc, issue) => {
-      if (!acc[issue.code]) {
-        acc[issue.code] = {
-          code: issue.code,
-          message: issue.message,
-          pages: [],
-        };
-      }
+  const issuesByCode = issues.reduce((acc, issue) => {
+    if (!acc[issue.code]) {
+      acc[issue.code] = [];
+    }
 
-      const page = acc[issue.code].pages.find((p) => p.url === issue.url);
+    acc[issue.code].push(issue);
+    return acc;
+  }, {} as Record<string, Issue[]>);
 
-      if (page) {
-        page.instances.push(issue);
-      } else {
-        acc[issue.code].pages.push({
-          url: issue.url,
-          instances: [issue],
-        });
-      }
+  const issuesData = Object.entries(issuesByCode)
+    .slice(0, 3)
+    .map(([code, instances]) => {
+      const pages = instances.reduce((acc, instance) => {
+        if (!acc[instance.url]) {
+          acc[instance.url] = [];
+        }
 
-      return acc;
-    },
-    {}
-  );
+        acc[instance.url].push(instance);
+        return acc;
+      }, {} as Record<string, Issue[]>);
+
+      return {
+        code,
+        message: instances[0].message,
+        pages: Object.entries(pages)
+          .slice(0, 3)
+          .map(([url, instances]) => ({
+            url,
+            instances: instances.slice(0, 3),
+            remaining: Math.max(0, instances.length - 3),
+          })),
+        remaining: Math.max(0, instances.length - 3),
+      };
+    });
 
   return {
     title,
-    issues: Object.values(issuesByCode),
+    issueCount: issues.length,
+    issues: issuesData,
+    remaining: Math.max(0, issues.length - 3),
   };
 }
 

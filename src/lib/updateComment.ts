@@ -1,6 +1,7 @@
 import { Issue } from "./scanUrls.js";
 import upsertComment from "../services/github/upsertComment.js";
 import Mustache from "mustache";
+import compareIssues from "./compareIssues.js";
 
 type SectionData = {
   codes: {
@@ -27,11 +28,19 @@ function prepareData(baseIssues: Issue[], headIssues: Issue[]): SectionData {
   const codes = Array.from(
     new Set([...baseIssues, ...headIssues].map(({ code }) => code))
   ).map((code) => {
-    const newCount = headIssues.filter((issue) => issue.code === code).length;
-    const fixedCount = baseIssues.filter((issue) => issue.code === code).length;
-    const retainedCount = baseIssues.length - fixedCount;
+    const baseMatches = baseIssues.filter((issue) => issue.code === code);
+    const headMatches = headIssues.filter((issue) => issue.code === code);
+    const comparison = compareIssues({
+      baseIssues: baseMatches,
+      headIssues: headMatches,
+    });
 
-    return { code, newCount, fixedCount, retainedCount };
+    return {
+      code,
+      newCount: comparison.new.length,
+      fixedCount: comparison.fixed.length,
+      retainedCount: comparison.retained.length,
+    };
   });
 
   return { codes };

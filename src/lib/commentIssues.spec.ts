@@ -10,7 +10,11 @@ describe("commentIssues", () => {
         fixed: [{ context: "fixed" }],
         retained: [{ context: "retained" }],
       } as any,
-      { archive_download_url: "the_artifact_url" }
+      {
+        data: {
+          archive_download_url: "the_artifact_url",
+        },
+      }
     );
 
     expect(octokit.rest.issues.createComment).toHaveBeenCalled();

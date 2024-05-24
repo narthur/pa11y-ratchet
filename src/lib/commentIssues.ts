@@ -8,12 +8,12 @@ type SectionData = {
   issues: {
     code: string;
     message: string;
-    pageCount: number;
     pages: {
       url: string;
-      instanceCount: number;
       instances: Issue[];
+      remaining: number;
     }[];
+    remaining: number;
   }[];
 };
 
@@ -30,9 +30,13 @@ const template = `
 {{#instances}}
   - \`{{{selector}}}\`
 {{/instances}}
-  - ... and {{instanceCount - 3}} more
+{{#remaining}}
+  - ... and {{remaining}} more
+{{/remaining}}
 {{/pages}}
-- ... and {{pageCount - 3}} more
+{{#remaining}}
+- ... and {{remaining}} more
+{{/remaining}}
 {{/issues}}
 `;
 
@@ -65,14 +69,14 @@ function prepareData(title: string, issues: Issue[]): SectionData {
       return {
         code,
         message: instances[0].message,
-        pageCount: Object.keys(pages).length,
         pages: Object.entries(pages)
           .slice(0, 3)
           .map(([url, instances]) => ({
             url,
-            instanceCount: instances.length,
             instances: instances.slice(0, 3),
+            remaining: Math.max(0, instances.length - 3),
           })),
+        remaining: Math.max(0, instances.length - 3),
       };
     });
 

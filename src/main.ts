@@ -1,6 +1,6 @@
 import getUrls from "./lib/getUrls.js";
 import getInputs from "./lib/getInputs.js";
-import commentIssues from "./lib/commentIssues.js";
+import updateComment from "./lib/updateComment.js";
 import compareIssues from "./lib/compareIssues.js";
 import core from "@actions/core";
 import findPr from "./services/github/findPr.js";
@@ -8,6 +8,7 @@ import { HEAD_SHA } from "./services/github/constants.js";
 import scanUrls from "./lib/scanUrls.js";
 import uploadIssues from "./lib/uploadIssues.js";
 import retrieveIssues from "./lib/retrieveIssues.js";
+import updateSummary from "./lib/updateSummary.js";
 
 export default async function main() {
   const pr = await findPr();
@@ -31,13 +32,17 @@ export default async function main() {
 
   const headIssues = await scanUrls(urls);
 
-  await uploadIssues(headIssues, headSha);
+  const { id } = await uploadIssues(headIssues, headSha);
+
+  if (!id) {
+    throw new Error("Failed to upload issues");
+  }
 
   const baseIssues = (await retrieveIssues(baseSha)) || [];
-  const comparison = await compareIssues({ baseIssues, headIssues });
+  const comparison = compareIssues({ baseIssues, headIssues });
 
-  console.log("Comparing issues and commenting on PR");
-  await commentIssues(comparison);
+  await updateSummary(headIssues);
+  await updateComment(baseIssues, headIssues);
 
   if (comparison.new.length) core.setFailed("Found new accessibility issues");
 }

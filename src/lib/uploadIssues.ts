@@ -1,10 +1,13 @@
-import { DefaultArtifactClient } from "@actions/artifact";
+import {
+  DefaultArtifactClient,
+  UploadArtifactResponse,
+} from "@actions/artifact";
 import writeCsv from "./writeCsv.js";
 
 export default async function uploadIssues(
   issues: Record<string, unknown>[],
   sha: string
-) {
+): Promise<UploadArtifactResponse> {
   const workspace = process.env.GITHUB_WORKSPACE;
 
   if (!workspace) {
@@ -17,5 +20,5 @@ export default async function uploadIssues(
 
   await writeCsv(outpath, issues);
 
-  await artifact.uploadArtifact(`pa11y-ratchet-${sha}`, [outname], workspace);
+  return artifact.uploadArtifact(`pa11y-ratchet-${sha}`, [outname], workspace);
 }

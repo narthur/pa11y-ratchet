@@ -59,6 +59,10 @@ vi.mock("./src/services/github/findPr.js", () => ({
   ),
 }));
 
+vi.mock("./src/services/github/getArtifact.js", () => ({
+  default: vi.fn(() => Promise.resolve({ url: "the_artifact_url" })),
+}));
+
 vi.mock("fast-csv", () => ({
   format: vi.fn(() => ({
     pipe: vi.fn(),

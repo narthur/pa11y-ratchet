@@ -40,6 +40,7 @@ const template = `
 {{/remaining}}
 {{/issues}}
 {{#remaining}}
+
 ... and {{remaining}} more
 {{/remaining}}
 `;

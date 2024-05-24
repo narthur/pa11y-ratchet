@@ -62,29 +62,11 @@ function prepareData(
   };
 }
 
-export default async function commentIssues(
-  issues: {
-    new: Issue[];
-    fixed: Issue[];
-    retained: Issue[];
-  },
-  artifact: { data: { archive_download_url: string } }
-) {
-  // let body =
-  //   "[Download full report](" + artifact.data.archive_download_url + ")\n\n";
-
-  // if (issues.new.length) {
-  //   body += renderSection(prepareData("🚨 New Issues", issues.new));
-  // }
-
-  // if (issues.fixed.length) {
-  //   body += renderSection(prepareData("🎉 Fixed issues", issues.fixed));
-  // }
-
-  // if (issues.retained.length) {
-  //   body += renderSection(prepareData("⚠️ Retained issues", issues.retained));
-  // }
-
+export default async function updateComment(issues: {
+  new: Issue[];
+  fixed: Issue[];
+  retained: Issue[];
+}) {
   const body = renderSection(prepareData("Summary", issues));
 
   await upsertComment(body);

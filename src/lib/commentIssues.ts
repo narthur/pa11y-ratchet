@@ -15,6 +15,7 @@ type SectionData = {
     }[];
     remaining: number;
   }[];
+  remaining: number;
 };
 
 const template = `
@@ -38,6 +39,9 @@ const template = `
 - ... and {{remaining}} more
 {{/remaining}}
 {{/issues}}
+{{#remaining}}
+... and {{remaining}} more
+{{/remaining}}
 `;
 
 function renderSection(data: SectionData): string {
@@ -84,6 +88,7 @@ function prepareData(title: string, issues: Issue[]): SectionData {
     title,
     issueCount: issues.length,
     issues: issuesData,
+    remaining: Math.max(0, issues.length - 3),
   };
 }
 

@@ -85,7 +85,7 @@ export default async function commentIssues(
   //   body += renderSection(prepareData("⚠️ Retained issues", issues.retained));
   // }
 
-  const body = renderSection(prepareData("Summary", issues.new));
+  const body = renderSection(prepareData("Summary", issues));
 
   await upsertComment(body);
 }

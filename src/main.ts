@@ -8,6 +8,7 @@ import { HEAD_SHA } from "./services/github/constants.js";
 import scanUrls from "./lib/scanUrls.js";
 import uploadIssues from "./lib/uploadIssues.js";
 import retrieveIssues from "./lib/retrieveIssues.js";
+import updateSummary from "./lib/updateSummary.js";
 
 export default async function main() {
   const pr = await findPr();
@@ -38,8 +39,9 @@ export default async function main() {
   }
 
   const baseIssues = (await retrieveIssues(baseSha)) || [];
-  const comparison = await compareIssues({ baseIssues, headIssues });
+  const comparison = compareIssues({ baseIssues, headIssues });
 
+  await updateSummary(headIssues);
   await updateComment(baseIssues, headIssues);
 
   if (comparison.new.length) core.setFailed("Found new accessibility issues");

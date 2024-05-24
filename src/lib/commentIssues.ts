@@ -99,9 +99,10 @@ export default async function commentIssues(
     fixed: Issue[];
     retained: Issue[];
   },
-  artifact: { url: string }
+  artifact: { archive_download_url: string }
 ) {
-  let body = "[Download full report](" + artifact.url + ")\n\n";
+  let body =
+    "[Download full report](" + artifact.archive_download_url + ")\n\n";
 
   if (issues.new.length) {
     body += renderSection(prepareData("🚨 New Issues", issues.new));

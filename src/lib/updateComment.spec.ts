@@ -4,11 +4,7 @@ import octokit from "../services/github/octokit.js";
 
 describe("commentIssues", () => {
   it("creates comment", async () => {
-    await updateComment({
-      new: [{ context: "new" }],
-      fixed: [{ context: "fixed" }],
-      retained: [{ context: "retained" }],
-    } as any);
+    await updateComment([], []);
 
     expect(octokit.rest.issues.createComment).toHaveBeenCalled();
   });

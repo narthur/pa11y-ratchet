@@ -40,7 +40,7 @@ export default async function main() {
   const baseIssues = (await retrieveIssues(baseSha)) || [];
   const comparison = await compareIssues({ baseIssues, headIssues });
 
-  await updateComment(comparison);
+  await updateComment(baseIssues, headIssues);
 
   if (comparison.new.length) core.setFailed("Found new accessibility issues");
 }

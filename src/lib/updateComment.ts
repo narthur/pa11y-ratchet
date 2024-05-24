@@ -23,51 +23,25 @@ function renderSection(data: SectionData): string {
   return Mustache.render(template, data);
 }
 
-function prepareData(
-  title: string,
-  issues: {
-    new: Issue[];
-    fixed: Issue[];
-    retained: Issue[];
-  }
-): SectionData {
-  const codes = issues.new
-    .concat(issues.fixed)
-    .concat(issues.retained)
-    .reduce((acc, issue) => {
-      const existing = acc.find((x) => x.code === issue.code);
+function prepareData(baseIssues: Issue[], headIssues: Issue[]): SectionData {
+  const codes = Array.from(
+    new Set([...baseIssues, ...headIssues].map(({ code }) => code))
+  ).map((code) => {
+    const newCount = headIssues.filter((issue) => issue.code === code).length;
+    const fixedCount = baseIssues.filter((issue) => issue.code === code).length;
+    const retainedCount = baseIssues.length - fixedCount;
 
-      if (existing) {
-        if (issues.new.includes(issue)) {
-          existing.newCount++;
-        } else if (issues.fixed.includes(issue)) {
-          existing.fixedCount++;
-        } else {
-          existing.retainedCount++;
-        }
-      } else {
-        acc.push({
-          code: issue.code,
-          newCount: issues.new.includes(issue) ? 1 : 0,
-          fixedCount: issues.fixed.includes(issue) ? 1 : 0,
-          retainedCount: issues.retained.includes(issue) ? 1 : 0,
-        });
-      }
+    return { code, newCount, fixedCount, retainedCount };
+  });
 
-      return acc;
-    }, [] as SectionData["codes"]);
-
-  return {
-    codes,
-  };
+  return { codes };
 }
 
-export default async function updateComment(issues: {
-  new: Issue[];
-  fixed: Issue[];
-  retained: Issue[];
-}) {
-  const body = renderSection(prepareData("Summary", issues));
+export default async function updateComment(
+  baseIssues: Issue[],
+  headIssues: Issue[]
+) {
+  const body = renderSection(prepareData(baseIssues, headIssues));
 
   await upsertComment(body);
 }

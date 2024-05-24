@@ -8,6 +8,7 @@ import { HEAD_SHA } from "./services/github/constants.js";
 import scanUrls from "./lib/scanUrls.js";
 import uploadIssues from "./lib/uploadIssues.js";
 import retrieveIssues from "./lib/retrieveIssues.js";
+import getArtifact from "./services/github/getArtifact.js";
 
 export default async function main() {
   const pr = await findPr();
@@ -31,13 +32,18 @@ export default async function main() {
 
   const headIssues = await scanUrls(urls);
 
-  await uploadIssues(headIssues, headSha);
+  const { id } = await uploadIssues(headIssues, headSha);
 
+  if (!id) {
+    throw new Error("Failed to upload issues");
+  }
+
+  const headArtifact = await getArtifact(id);
   const baseIssues = (await retrieveIssues(baseSha)) || [];
   const comparison = await compareIssues({ baseIssues, headIssues });
 
   console.log("Comparing issues and commenting on PR");
-  await commentIssues(comparison);
+  await commentIssues(comparison, headArtifact);
 
   if (comparison.new.length) core.setFailed("Found new accessibility issues");
 }

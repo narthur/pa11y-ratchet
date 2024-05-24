@@ -93,12 +93,15 @@ function prepareData(title: string, issues: Issue[]): SectionData {
   };
 }
 
-export default async function commentIssues(issues: {
-  new: Issue[];
-  fixed: Issue[];
-  retained: Issue[];
-}) {
-  let body = "";
+export default async function commentIssues(
+  issues: {
+    new: Issue[];
+    fixed: Issue[];
+    retained: Issue[];
+  },
+  artifact: { url: string }
+) {
+  let body = "[Download full report](" + artifact.url + ")\n\n";
 
   if (issues.new.length) {
     body += renderSection(prepareData("🚨 New Issues", issues.new));

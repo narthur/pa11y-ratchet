@@ -15,6 +15,12 @@ describe("main", () => {
       name: "pa11y-ratchet-the_base_sha",
       id: 3,
     } as any);
+
+    vi.mocked(DefaultArtifactClient.prototype.uploadArtifact).mockResolvedValue(
+      {
+        id: 1,
+      }
+    );
   });
 
   it("gets sitemap", async () => {

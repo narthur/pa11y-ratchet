@@ -4,11 +4,14 @@ import octokit from "../services/github/octokit.js";
 
 describe("commentIssues", () => {
   it("creates comment", async () => {
-    await commentIssues({
-      new: [{ context: "new" }],
-      fixed: [{ context: "fixed" }],
-      retained: [{ context: "retained" }],
-    } as any);
+    await commentIssues(
+      {
+        new: [{ context: "new" }],
+        fixed: [{ context: "fixed" }],
+        retained: [{ context: "retained" }],
+      } as any,
+      { url: "the_artifact_url" }
+    );
 
     expect(octokit.rest.issues.createComment).toHaveBeenCalled();
   });

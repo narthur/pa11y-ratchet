@@ -23,29 +23,39 @@ function renderSection(data: SectionData): string {
   return Mustache.render(template, data);
 }
 
-function prepareData(title: string, issues: Issue[]): SectionData {
-  const codes = issues.reduce<SectionData["codes"]>((acc, issue) => {
-    const existing = acc.find((x) => x.code === issue.code);
+function prepareData(
+  title: string,
+  issues: {
+    new: Issue[];
+    fixed: Issue[];
+    retained: Issue[];
+  }
+): SectionData {
+  const codes = issues.new
+    .concat(issues.fixed)
+    .concat(issues.retained)
+    .reduce((acc, issue) => {
+      const existing = acc.find((x) => x.code === issue.code);
 
-    if (existing) {
-      if (issue.context === "new") {
-        existing.newCount++;
-      } else if (issue.context === "fixed") {
-        existing.fixedCount++;
-      } else if (issue.context === "retained") {
-        existing.retainedCount++;
+      if (existing) {
+        if (issues.new.includes(issue)) {
+          existing.newCount++;
+        } else if (issues.fixed.includes(issue)) {
+          existing.fixedCount++;
+        } else {
+          existing.retainedCount++;
+        }
+      } else {
+        acc.push({
+          code: issue.code,
+          newCount: issues.new.includes(issue) ? 1 : 0,
+          fixedCount: issues.fixed.includes(issue) ? 1 : 0,
+          retainedCount: issues.retained.includes(issue) ? 1 : 0,
+        });
       }
-    } else {
-      acc.push({
-        code: issue.code,
-        newCount: issue.context === "new" ? 1 : 0,
-        fixedCount: issue.context === "fixed" ? 1 : 0,
-        retainedCount: issue.context === "retained" ? 1 : 0,
-      });
-    }
 
-    return acc;
-  }, []);
+      return acc;
+    }, [] as SectionData["codes"]);
 
   return {
     codes,

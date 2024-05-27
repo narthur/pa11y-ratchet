@@ -23,9 +23,9 @@ function addSummaryTable(issues: Issue[]) {
 function addInstanceTable(issues: Issue[]) {
   const headerRow = ["Path", "Selector", "Context"];
   const rows = issues.map((issue) => [
-    `[${new URL(issue.url).pathname}](${issue.url})`,
-    `<code>${issue.selector}</code>`,
-    `<code>${issue.context}</code>`,
+    `<a href="${issue.url}">${new URL(issue.url).pathname}</a>`,
+    issue.selector ? `<code>${issue.selector}</code>` : "",
+    issue.context ? `<code>${issue.context}</code>` : "",
   ]);
   core.summary.addTable([headerRow, ...rows]);
 }

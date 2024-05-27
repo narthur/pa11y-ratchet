@@ -66,7 +66,7 @@ describe("main", () => {
 
   it("sets failed status if new issues found", async () => {
     vi.mocked(pa11y).mockResolvedValue({
-      issues: [{ message: "the_error_message" }],
+      issues: [{ message: "the_error_message", url: "https://the.url" }],
     } as any);
     vi.mocked(readCsv).mockResolvedValue([]);
 

@@ -3,6 +3,7 @@ import upsertComment from "../services/github/upsertComment.js";
 import compareIssues from "./compareIssues.js";
 import core from "@actions/core";
 import getSummaryUrl from "../services/github/getSummaryUrl.js";
+import sleep from "./sleep.js";
 
 type CodeComparison = {
   code: string;
@@ -15,7 +16,7 @@ async function getBody(data: CodeComparison[]): Promise<string> {
   core.summary.emptyBuffer();
 
   // WORKAROUND: Wait for buffer to be emptied
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await sleep(1000);
 
   core.summary.addHeading("Accessibility Issues", 2);
   core.summary.addTable([

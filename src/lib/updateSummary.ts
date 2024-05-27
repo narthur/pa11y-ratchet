@@ -1,6 +1,7 @@
 import { Issue } from "./scanUrls.js";
 import core from "@actions/core";
 import escapeHtml from "./escapeHtml.js";
+import sleep from "./sleep.js";
 
 function getCodes(issues: Issue[]): string[] {
   return Array.from(new Set(issues.map((issue) => issue.code)));
@@ -31,16 +32,7 @@ function addInstanceTable(issues: Issue[]) {
   core.summary.addTable([headerRow, ...rows]);
 }
 
-export default async function updateSummary(issues: Issue[]) {
-  if (!issues.length) {
-    return;
-  }
-
-  core.summary.emptyBuffer();
-
-  // WORKAROUND: Wait for buffer to be emptied
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
+function addSummary(issues: Issue[]) {
   core.summary.addRaw('<h2 id="pa11y-summary">Accessibility Issues</h2>');
 
   const codes = getCodes(issues);
@@ -53,6 +45,19 @@ export default async function updateSummary(issues: Issue[]) {
 
     addSummaryTable(instances);
     addInstanceTable(instances);
+  }
+}
+
+export default async function updateSummary(issues: Issue[]) {
+  core.summary.emptyBuffer();
+
+  // WORKAROUND: Wait for buffer to be emptied
+  await sleep(1000);
+
+  if (issues.length) {
+    addSummary(issues);
+  } else {
+    core.summary.addRaw("🎉 No accessibility issues found!");
   }
 
   core.summary.write({ overwrite: true });

@@ -1,56 +1,55 @@
 import { Issue } from "./scanUrls.js";
 import upsertComment from "../services/github/upsertComment.js";
-import Mustache from "mustache";
 import compareIssues from "./compareIssues.js";
+import core from "@actions/core";
+import getSummaryUrl from "../services/github/getSummaryUrl.js";
 
-type SectionData = {
-  codes: {
-    code: string;
-    newCount: number;
-    fixedCount: number;
-    retainedCount: number;
-  }[];
+type CodeComparison = {
+  code: string;
+  new: Issue[];
+  fixed: Issue[];
+  retained: Issue[];
 };
 
-const template = `
-Code | N:F:R
----- | -----
-{{#codes}}
-{{code}} | {{newCount}}:{{fixedCount}}:{{retainedCount}}
-{{/codes}}
-`;
+async function getBody(data: CodeComparison[]): Promise<string> {
+  core.summary.emptyBuffer();
+  core.summary.addHeading("Accessibility Issues", 2);
+  core.summary.addTable([
+    ["Code", "New:Fixed:Retained"],
+    ...data.map((d) => [
+      d.code,
+      `${d.new.length}:${d.fixed.length}:${d.retained.length}`,
+    ]),
+  ]);
 
-function renderSection(data: SectionData): string {
-  return Mustache.render(template, data);
+  const summaryUrl = await getSummaryUrl();
+
+  core.summary.addLink("View full summary", summaryUrl);
+
+  return core.summary.stringify();
 }
 
-function prepareData(baseIssues: Issue[], headIssues: Issue[]): SectionData {
-  const codes = Array.from(
+function getCodeComparisons(
+  baseIssues: Issue[],
+  headIssues: Issue[]
+): CodeComparison[] {
+  return Array.from(
     new Set([...baseIssues, ...headIssues].map(({ code }) => code))
-  ).map((code) => {
-    const baseMatches = baseIssues.filter((issue) => issue.code === code);
-    const headMatches = headIssues.filter((issue) => issue.code === code);
-    const comparison = compareIssues({
-      baseIssues: baseMatches,
-      headIssues: headMatches,
-    });
-
-    return {
-      code,
-      newCount: comparison.new.length,
-      fixedCount: comparison.fixed.length,
-      retainedCount: comparison.retained.length,
-    };
-  });
-
-  return { codes };
+  ).map((code) => ({
+    code,
+    ...compareIssues({
+      baseIssues: baseIssues.filter((issue) => issue.code === code),
+      headIssues: headIssues.filter((issue) => issue.code === code),
+    }),
+  }));
 }
 
 export default async function updateComment(
   baseIssues: Issue[],
   headIssues: Issue[]
 ) {
-  const body = renderSection(prepareData(baseIssues, headIssues));
+  const comparisons = getCodeComparisons(baseIssues, headIssues);
+  const body = await getBody(comparisons);
 
   await upsertComment(body);
 }

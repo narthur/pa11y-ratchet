@@ -36,6 +36,9 @@ export default async function updateSummary(issues: Issue[]) {
     return;
   }
 
+  core.summary.emptyBuffer();
+  core.summary.addRaw('<h2 id="pa11y-summary">Accessibility Issues</h2>');
+
   const codes = getCodes(issues);
 
   for (const code of codes) {

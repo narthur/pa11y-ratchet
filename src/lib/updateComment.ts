@@ -90,6 +90,10 @@ async function getHeadBody(headIssues: Issue[]): Promise<string> {
     ]),
   ]);
 
+  const summaryUrl = await getSummaryUrl();
+
+  core.summary.addLink("View full summary", summaryUrl);
+
   return core.summary.stringify();
 }
 

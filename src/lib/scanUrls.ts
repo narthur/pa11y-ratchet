@@ -8,6 +8,7 @@ export type Issue = {
   type: string;
   typeCode: number;
   url: string;
+  runner?: string;
 };
 
 export default async function scanUrls(urls: string[]): Promise<Issue[]> {
@@ -29,6 +30,7 @@ export default async function scanUrls(urls: string[]): Promise<Issue[]> {
             type: "error",
             typeCode: 1,
             url,
+            runner: "action",
           },
         ],
       };

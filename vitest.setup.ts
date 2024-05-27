@@ -49,6 +49,11 @@ vi.mock("./src/lib/getUrls.js", () => ({
 vi.mock("./src/lib/readCsv.js", () => ({
   default: vi.fn(() => Promise.resolve([])),
 }));
+
+vi.mock("./src/lib/sleep.js", () => ({
+  default: vi.fn(() => Promise.resolve(undefined)),
+}));
+
 vi.mock("./src/lib/writeCsv.js");
 vi.mock("./src/services/github/downloadArtifact.js");
 vi.mock("./src/services/github/findArtifact.js");
@@ -61,6 +66,10 @@ vi.mock("./src/services/github/findPr.js", () => ({
 
 vi.mock("./src/services/github/getArtifact.js", () => ({
   default: vi.fn(() => Promise.resolve({ url: "the_artifact_url" })),
+}));
+
+vi.mock("./src/services/github/upsertComment.js", () => ({
+  default: vi.fn(() => Promise.resolve(undefined)),
 }));
 
 vi.mock("fast-csv", () => ({

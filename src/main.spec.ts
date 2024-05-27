@@ -8,6 +8,7 @@ import downloadArtifact from "./services/github/downloadArtifact.js";
 import core from "@actions/core";
 import readCsv from "./lib/readCsv.js";
 import { DefaultArtifactClient } from "@actions/artifact";
+import upsertComment from "./services/github/upsertComment.js";
 
 describe("main", () => {
   beforeEach(() => {
@@ -66,7 +67,7 @@ describe("main", () => {
 
   it("sets failed status if new issues found", async () => {
     vi.mocked(pa11y).mockResolvedValue({
-      issues: [{ message: "the_error_message" }],
+      issues: [{ message: "the_error_message", url: "https://the.url" }],
     } as any);
     vi.mocked(readCsv).mockResolvedValue([]);
 
@@ -89,5 +90,33 @@ describe("main", () => {
       expect.anything(),
       expect.anything()
     );
+  });
+
+  it("updates comment before updating summary", async () => {
+    // WORKAROUND: Updating our PR comment after we update the
+    // summary results in the summary being lost.
+
+    await main();
+
+    expect(upsertComment).toBeCalledTimes(1);
+    expect(core.summary.write).toBeCalledTimes(1);
+
+    const upsertCommentOrder =
+      vi.mocked(upsertComment).mock.invocationCallOrder[0];
+    const summaryWriteOrder = vi.mocked(core.summary.write).mock
+      .invocationCallOrder[0];
+
+    expect(upsertCommentOrder).toBeLessThan(summaryWriteOrder);
+  });
+
+  it("does not fail run if no base artifact found", async () => {
+    vi.mocked(pa11y).mockResolvedValue({
+      issues: [{ message: "the_error_message", url: "https://the.url" }],
+    } as any);
+    vi.mocked(findArtifact).mockResolvedValue(undefined);
+
+    await main();
+
+    expect(core.setFailed).not.toBeCalled();
   });
 });

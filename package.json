@@ -1,6 +1,6 @@
 {
   "name": "pa11y-ratchet",
-  "version": "2.8.0",
+  "version": "2.9.0",
   "description": "",
   "main": "index.js",
   "type": "module",
@@ -33,7 +33,6 @@
     "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.0",
     "fast-csv": "^5.0.1",
-    "mustache": "^4.2.0",
     "node-fetch": "^3.3.2",
     "pa11y": "^8.0.0",
     "remove": "^0.1.5",

@@ -1,56 +1,105 @@
 import { Issue } from "./scanUrls.js";
 import upsertComment from "../services/github/upsertComment.js";
-import Mustache from "mustache";
 import compareIssues from "./compareIssues.js";
+import core from "@actions/core";
+import getSummaryUrl from "../services/github/getSummaryUrl.js";
+import sleep from "./sleep.js";
 
-type SectionData = {
-  codes: {
-    code: string;
-    newCount: number;
-    fixedCount: number;
-    retainedCount: number;
-  }[];
+type CodeComparison = {
+  code: string;
+  new: Issue[];
+  fixed: Issue[];
+  retained: Issue[];
 };
 
-const template = `
-Code | N:F:R
----- | -----
-{{#codes}}
-{{code}} | {{newCount}}:{{fixedCount}}:{{retainedCount}}
-{{/codes}}
-`;
-
-function renderSection(data: SectionData): string {
-  return Mustache.render(template, data);
+function getCodes(issues: Issue[]): string[] {
+  return Array.from(new Set(issues.map((issue) => issue.code)));
 }
 
-function prepareData(baseIssues: Issue[], headIssues: Issue[]): SectionData {
-  const codes = Array.from(
-    new Set([...baseIssues, ...headIssues].map(({ code }) => code))
-  ).map((code) => {
-    const baseMatches = baseIssues.filter((issue) => issue.code === code);
-    const headMatches = headIssues.filter((issue) => issue.code === code);
-    const comparison = compareIssues({
-      baseIssues: baseMatches,
-      headIssues: headMatches,
-    });
+function getCodeComparisons(
+  baseIssues: Issue[],
+  headIssues: Issue[]
+): CodeComparison[] {
+  const codes = getCodes([...baseIssues, ...headIssues]);
+  return codes.map((code) => ({
+    code,
+    ...compareIssues({
+      baseIssues: baseIssues.filter((issue) => issue.code === code),
+      headIssues: headIssues.filter((issue) => issue.code === code),
+    }),
+  }));
+}
 
-    return {
+async function getComparativeBody(
+  baseIssues: Issue[],
+  headIssues: Issue[]
+): Promise<string> {
+  const data = getCodeComparisons(baseIssues, headIssues);
+
+  core.summary.emptyBuffer();
+
+  // WORKAROUND: Wait for buffer to be emptied
+  await sleep(1000);
+
+  core.summary.addHeading("Accessibility Issues", 2);
+
+  const newCount = data.reduce((acc, d) => acc + d.new.length, 0);
+  const fixedCount = data.reduce((acc, d) => acc + d.fixed.length, 0);
+
+  if (newCount) {
+    core.summary.addRaw(`⚠️ ${newCount} new issues found!`);
+  }
+
+  if (fixedCount) {
+    core.summary.addRaw(`✅ ${fixedCount} issues fixed!`);
+  }
+
+  core.summary.addTable([
+    ["Code", "New", "Fixed", "Retained", "Total"],
+    ...data.map((d) => [
+      d.code,
+      d.new.length.toString(),
+      d.fixed.length.toString(),
+      d.retained.length.toString(),
+      (d.new.length + d.fixed.length + d.retained.length).toString(),
+    ]),
+  ]);
+
+  const summaryUrl = await getSummaryUrl();
+
+  core.summary.addLink("View full summary", summaryUrl);
+
+  return core.summary.stringify();
+}
+
+async function getHeadBody(headIssues: Issue[]): Promise<string> {
+  core.summary.emptyBuffer();
+
+  // WORKAROUND: Wait for buffer to be emptied
+  await sleep(1000);
+
+  core.summary.addHeading("Accessibility Issues", 2);
+
+  const codes = getCodes(headIssues);
+
+  core.summary.addTable([
+    ["Code", "Count"],
+    ...codes.map((code) => [
       code,
-      newCount: comparison.new.length,
-      fixedCount: comparison.fixed.length,
-      retainedCount: comparison.retained.length,
-    };
-  });
+      headIssues.filter((issue) => issue.code === code).length.toString(),
+    ]),
+  ]);
 
-  return { codes };
+  return core.summary.stringify();
 }
 
 export default async function updateComment(
-  baseIssues: Issue[],
+  baseIssues: Issue[] | undefined,
   headIssues: Issue[]
 ) {
-  const body = renderSection(prepareData(baseIssues, headIssues));
+  const body = baseIssues
+    ? await getComparativeBody(baseIssues, headIssues)
+    : await getHeadBody(headIssues);
 
   await upsertComment(body);
 }

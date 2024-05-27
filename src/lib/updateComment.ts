@@ -42,6 +42,18 @@ async function getComparativeBody(
   await sleep(1000);
 
   core.summary.addHeading("Accessibility Issues", 2);
+
+  const newCount = data.reduce((acc, d) => acc + d.new.length, 0);
+  const fixedCount = data.reduce((acc, d) => acc + d.fixed.length, 0);
+
+  if (newCount) {
+    core.summary.addRaw(`⚠️ ${newCount} new issues found!`);
+  }
+
+  if (fixedCount) {
+    core.summary.addRaw(`✅ ${fixedCount} issues fixed!`);
+  }
+
   core.summary.addTable([
     ["Code", "New", "Fixed", "Retained", "Total"],
     ...data.map((d) => [

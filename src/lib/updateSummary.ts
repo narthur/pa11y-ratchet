@@ -1,36 +1,23 @@
 import { Issue } from "./scanUrls.js";
 import core from "@actions/core";
 
-function addCodeTable(issues: Issue[]) {
-  const codes = Array.from(new Set(issues.map((issue) => issue.code)));
-  const headerRow = [
-    "Code",
-    "Description",
-    "Type",
-    "Runner",
-    "Instance Count",
-    "URL Count",
-    "Selector Count",
-  ];
-  const rows = codes.map((code) => {
-    const instances = issues.filter((issue) => issue.code === code);
-    const urlCount = Array.from(
-      new Set(instances.map((issue) => issue.url))
-    ).length;
-    const selectorCount = Array.from(
-      new Set(instances.map((issue) => issue.selector))
-    ).length;
-    return [
-      code,
-      instances[0].message,
-      instances[0].type,
-      instances[0].runner || "",
-      instances.length.toString(),
-      urlCount.toString(),
-      selectorCount.toString(),
-    ];
-  });
-  core.summary.addTable([headerRow, ...rows]);
+function getCodes(issues: Issue[]): string[] {
+  return Array.from(new Set(issues.map((issue) => issue.code)));
+}
+
+function getInstances(issues: Issue[], code: string): Issue[] {
+  return issues.filter((issue) => issue.code === code);
+}
+
+function addSummaryTable(issues: Issue[]) {
+  const urlCount = Array.from(new Set(issues.map((issue) => issue.url))).length;
+  const selectorCount = Array.from(
+    new Set(issues.map((issue) => issue.selector))
+  ).length;
+  core.summary.addTable([
+    ["Instance Count", "URL Count", "Selector Count"],
+    [issues.length.toString(), urlCount.toString(), selectorCount.toString()],
+  ]);
 }
 
 function addInstanceTable(issues: Issue[]) {
@@ -49,8 +36,17 @@ export default async function updateSummary(issues: Issue[]) {
     return;
   }
 
-  addCodeTable(issues);
-  addInstanceTable(issues);
+  const codes = getCodes(issues);
+
+  for (const code of codes) {
+    const instances = getInstances(issues, code);
+
+    core.summary.addHeading(code);
+    core.summary.addQuote(instances[0].message);
+
+    addSummaryTable(instances);
+    addInstanceTable(instances);
+  }
 
   core.summary.write({ overwrite: true });
 }

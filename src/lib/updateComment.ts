@@ -14,12 +14,10 @@ type CodeComparison = {
 async function getBody(data: CodeComparison[]): Promise<string> {
   core.summary.emptyBuffer();
 
-  let body = "";
+  // Wait for buffer to be emptied
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   core.summary.addHeading("Accessibility Issues", 2);
-
-  body += core.summary.stringify();
-
   core.summary.addTable([
     ["Code", "New:Fixed:Retained"],
     ...data.map((d) => [
@@ -28,15 +26,11 @@ async function getBody(data: CodeComparison[]): Promise<string> {
     ]),
   ]);
 
-  body += core.summary.stringify();
-
   const summaryUrl = await getSummaryUrl();
 
   core.summary.addLink("View full summary", summaryUrl);
 
-  body += core.summary.stringify();
-
-  return body;
+  return core.summary.stringify();
 }
 
 function getCodeComparisons(
@@ -59,7 +53,7 @@ export default async function updateComment(
   headIssues: Issue[]
 ) {
   const comparisons = getCodeComparisons(baseIssues, headIssues);
-  const body = await getBody(comparisons);
+  const body = getBody(comparisons);
 
   await upsertComment(body);
 }

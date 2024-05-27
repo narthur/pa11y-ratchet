@@ -14,7 +14,7 @@ type CodeComparison = {
 async function getBody(data: CodeComparison[]): Promise<string> {
   core.summary.emptyBuffer();
 
-  // Wait for buffer to be emptied
+  // WORKAROUND: Wait for buffer to be emptied
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   core.summary.addHeading("Accessibility Issues", 2);

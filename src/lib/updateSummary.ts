@@ -37,6 +37,10 @@ export default async function updateSummary(issues: Issue[]) {
   }
 
   core.summary.emptyBuffer();
+
+  // WORKAROUND: Wait for buffer to be emptied
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
   core.summary.addRaw('<h2 id="pa11y-summary">Accessibility Issues</h2>');
 
   const codes = getCodes(issues);

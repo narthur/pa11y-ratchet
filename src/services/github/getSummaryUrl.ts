@@ -6,8 +6,8 @@ export default async function getSummaryUrl() {
 
   const owner = github.context.repo.owner;
   const repo = github.context.repo.repo;
-  const runNumber = github.context.runNumber;
+  const runId = github.context.runId;
   const prNumber = pr.number;
 
-  return `https://github.com/${owner}/${repo}/actions/runs/${runNumber}?pr=${prNumber}#pa11y-summary`;
+  return `https://github.com/${owner}/${repo}/actions/runs/${runId}?pr=${prNumber}#pa11y-summary`;
 }

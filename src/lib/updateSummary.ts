@@ -32,7 +32,9 @@ function addInstanceTable(issues: Issue[]) {
       issue.context ? `<code>${escapeHtml(issue.context)}</code>` : "",
     ]);
   core.summary.addTable([headerRow, ...rows]);
-  core.summary.addRaw(`... and ${issues.length - 100} more`);
+  if (issues.length > 100) {
+    core.summary.addRaw(`... and ${issues.length - 100} more`);
+  }
 }
 
 function addSummary(issues: Issue[]) {

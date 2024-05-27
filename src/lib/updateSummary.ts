@@ -1,5 +1,6 @@
 import { Issue } from "./scanUrls.js";
 import core from "@actions/core";
+import escapeHtml from "./escapeHtml.js";
 
 function getCodes(issues: Issue[]): string[] {
   return Array.from(new Set(issues.map((issue) => issue.code)));
@@ -15,7 +16,7 @@ function addSummaryTable(issues: Issue[]) {
     new Set(issues.map((issue) => issue.selector))
   ).length;
   core.summary.addTable([
-    ["Instance Count", "URL Count", "Selector Count"],
+    ["Instances", "URLs", "Selectors"],
     [issues.length.toString(), urlCount.toString(), selectorCount.toString()],
   ]);
 }
@@ -24,8 +25,8 @@ function addInstanceTable(issues: Issue[]) {
   const headerRow = ["Path", "Selector", "Context"];
   const rows = issues.map((issue) => [
     `<a href="${issue.url}">${new URL(issue.url).pathname}</a>`,
-    issue.selector ? `<code>${issue.selector}</code>` : "",
-    issue.context ? `<code>${issue.context}</code>` : "",
+    issue.selector ? `<code>${escapeHtml(issue.selector)}</code>` : "",
+    issue.context ? `<code>${escapeHtml(issue.context)}</code>` : "",
   ]);
   core.summary.addTable([headerRow, ...rows]);
 }

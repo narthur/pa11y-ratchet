@@ -24,12 +24,15 @@ function addSummaryTable(issues: Issue[]) {
 
 function addInstanceTable(issues: Issue[]) {
   const headerRow = ["Path", "Selector", "Context"];
-  const rows = issues.map((issue) => [
-    `<a href="${issue.url}">${new URL(issue.url).pathname}</a>`,
-    issue.selector ? `<code>${escapeHtml(issue.selector)}</code>` : "",
-    issue.context ? `<code>${escapeHtml(issue.context)}</code>` : "",
-  ]);
+  const rows = issues
+    .slice(0, 100)
+    .map((issue) => [
+      `<a href="${issue.url}">${new URL(issue.url).pathname}</a>`,
+      issue.selector ? `<code>${escapeHtml(issue.selector)}</code>` : "",
+      issue.context ? `<code>${escapeHtml(issue.context)}</code>` : "",
+    ]);
   core.summary.addTable([headerRow, ...rows]);
+  core.summary.addRaw(`... and ${issues.length - 100} more`);
 }
 
 function addSummary(issues: Issue[]) {

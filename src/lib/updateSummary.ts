@@ -21,12 +21,11 @@ function addSummaryTable(issues: Issue[]) {
 }
 
 function addInstanceTable(issues: Issue[]) {
-  const headerRow = ["URL", "Code", "Selector", "Context"];
+  const headerRow = ["Path", "Selector", "Context"];
   const rows = issues.map((issue) => [
-    issue.url,
-    issue.code,
-    issue.selector,
-    issue.context,
+    `[${new URL(issue.url).pathname}](${issue.url})`,
+    `<code>${issue.selector}</code>`,
+    `<code>${issue.context}</code>`,
   ]);
   core.summary.addTable([headerRow, ...rows]);
 }
@@ -41,7 +40,7 @@ export default async function updateSummary(issues: Issue[]) {
   for (const code of codes) {
     const instances = getInstances(issues, code);
 
-    core.summary.addHeading(code);
+    core.summary.addHeading(code, 3);
     core.summary.addQuote(instances[0].message);
 
     addSummaryTable(instances);

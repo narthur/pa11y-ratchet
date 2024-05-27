@@ -53,7 +53,7 @@ export default async function updateComment(
   headIssues: Issue[]
 ) {
   const comparisons = getCodeComparisons(baseIssues, headIssues);
-  const body = getBody(comparisons);
+  const body = await getBody(comparisons);
 
   await upsertComment(body);
 }

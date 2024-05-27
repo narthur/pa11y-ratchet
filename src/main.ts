@@ -38,11 +38,16 @@ export default async function main() {
     throw new Error("Failed to upload issues");
   }
 
-  const baseIssues = (await retrieveIssues(baseSha)) || [];
-  const comparison = compareIssues({ baseIssues, headIssues });
+  const baseIssues = await retrieveIssues(baseSha);
 
   await updateComment(baseIssues, headIssues);
   await updateSummary(headIssues);
+
+  if (!baseIssues) {
+    return;
+  }
+
+  const comparison = compareIssues({ baseIssues, headIssues });
 
   if (comparison.new.length) core.setFailed("Found new accessibility issues");
 }

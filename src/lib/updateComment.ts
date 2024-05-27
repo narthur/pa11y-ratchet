@@ -12,7 +12,30 @@ type CodeComparison = {
   retained: Issue[];
 };
 
-async function getBody(data: CodeComparison[]): Promise<string> {
+function getCodes(issues: Issue[]): string[] {
+  return Array.from(new Set(issues.map((issue) => issue.code)));
+}
+
+function getCodeComparisons(
+  baseIssues: Issue[],
+  headIssues: Issue[]
+): CodeComparison[] {
+  const codes = getCodes([...baseIssues, ...headIssues]);
+  return codes.map((code) => ({
+    code,
+    ...compareIssues({
+      baseIssues: baseIssues.filter((issue) => issue.code === code),
+      headIssues: headIssues.filter((issue) => issue.code === code),
+    }),
+  }));
+}
+
+async function getComparativeBody(
+  baseIssues: Issue[],
+  headIssues: Issue[]
+): Promise<string> {
+  const data = getCodeComparisons(baseIssues, headIssues);
+
   core.summary.emptyBuffer();
 
   // WORKAROUND: Wait for buffer to be emptied
@@ -20,10 +43,13 @@ async function getBody(data: CodeComparison[]): Promise<string> {
 
   core.summary.addHeading("Accessibility Issues", 2);
   core.summary.addTable([
-    ["Code", "New:Fixed:Retained"],
+    ["Code", "New", "Fixed", "Retained", "Total"],
     ...data.map((d) => [
       d.code,
-      `${d.new.length}:${d.fixed.length}:${d.retained.length}`,
+      d.new.length.toString(),
+      d.fixed.length.toString(),
+      d.retained.length.toString(),
+      (d.new.length + d.fixed.length + d.retained.length).toString(),
     ]),
   ]);
 
@@ -34,27 +60,34 @@ async function getBody(data: CodeComparison[]): Promise<string> {
   return core.summary.stringify();
 }
 
-function getCodeComparisons(
-  baseIssues: Issue[],
-  headIssues: Issue[]
-): CodeComparison[] {
-  return Array.from(
-    new Set([...baseIssues, ...headIssues].map(({ code }) => code))
-  ).map((code) => ({
-    code,
-    ...compareIssues({
-      baseIssues: baseIssues.filter((issue) => issue.code === code),
-      headIssues: headIssues.filter((issue) => issue.code === code),
-    }),
-  }));
+async function getHeadBody(headIssues: Issue[]): Promise<string> {
+  core.summary.emptyBuffer();
+
+  // WORKAROUND: Wait for buffer to be emptied
+  await sleep(1000);
+
+  core.summary.addHeading("Accessibility Issues", 2);
+
+  const codes = getCodes(headIssues);
+
+  core.summary.addTable([
+    ["Code", "Count"],
+    ...codes.map((code) => [
+      code,
+      headIssues.filter((issue) => issue.code === code).length.toString(),
+    ]),
+  ]);
+
+  return core.summary.stringify();
 }
 
 export default async function updateComment(
-  baseIssues: Issue[],
+  baseIssues: Issue[] | undefined,
   headIssues: Issue[]
 ) {
-  const comparisons = getCodeComparisons(baseIssues, headIssues);
-  const body = await getBody(comparisons);
+  const body = baseIssues
+    ? await getComparativeBody(baseIssues, headIssues)
+    : await getHeadBody(headIssues);
 
   await upsertComment(body);
 }

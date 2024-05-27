@@ -108,4 +108,15 @@ describe("main", () => {
 
     expect(upsertCommentOrder).toBeLessThan(summaryWriteOrder);
   });
+
+  it("does not fail run if no base artifact found", async () => {
+    vi.mocked(pa11y).mockResolvedValue({
+      issues: [{ message: "the_error_message", url: "https://the.url" }],
+    } as any);
+    vi.mocked(findArtifact).mockResolvedValue(undefined);
+
+    await main();
+
+    expect(core.setFailed).not.toBeCalled();
+  });
 });

@@ -55,10 +55,7 @@ describe("main", () => {
 
     await main();
 
-    expect(pa11y).toBeCalledWith(
-      expect.stringContaining("the_replace"),
-      expect.anything()
-    );
+    expect(pa11y).toBeCalledWith(expect.stringContaining("the_replace"));
   });
 
   it("downloads base sha artifact", async () => {

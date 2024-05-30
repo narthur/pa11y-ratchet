@@ -47,11 +47,11 @@ async function getComparativeBody(
   const fixedCount = data.reduce((acc, d) => acc + d.fixed.length, 0);
 
   if (newCount) {
-    core.summary.addRaw(`⚠️ ${newCount} new issues found!`);
+    core.summary.addRaw(`⚠️ ${newCount} new issues found!\n`);
   }
 
   if (fixedCount) {
-    core.summary.addRaw(`✅ ${fixedCount} issues fixed!`);
+    core.summary.addRaw(`✅ ${fixedCount} issues fixed!\n`);
   }
 
   core.summary.addTable([

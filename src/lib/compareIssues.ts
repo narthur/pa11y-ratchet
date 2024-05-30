@@ -1,4 +1,5 @@
 import { Issue } from "./scanUrls.js";
+import getInputs from "./getInputs.js";
 
 type Options = {
   baseIssues: Issue[];
@@ -16,10 +17,23 @@ export default function compareIssues({
   new: Issue[];
   fixed: Issue[];
   retained: Issue[];
+  ignored: Issue[];
 } {
+  const { ignore } = getInputs();
+  const ignoreCodes = ignore.split(",").map((i) => i.trim());
+
+  function isIgnored(issue: Issue) {
+    return ignoreCodes.some((c) => issue.code === c);
+  }
+
   return {
-    new: head.filter((hi) => !base.some((bi) => eq(bi, hi))),
-    fixed: base.filter((bi) => !head.some((hi) => eq(bi, hi))),
-    retained: base.filter((bi) => head.some((hi) => eq(bi, hi))),
+    new: head.filter((hi) => !base.some((bi) => eq(bi, hi)) && !isIgnored(hi)),
+    fixed: base.filter(
+      (bi) => !head.some((hi) => eq(bi, hi)) && !isIgnored(bi)
+    ),
+    retained: base.filter(
+      (bi) => head.some((hi) => eq(bi, hi)) && !isIgnored(bi)
+    ),
+    ignored: head.filter(isIgnored),
   };
 }

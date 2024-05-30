@@ -4,13 +4,9 @@ import compareIssues from "./compareIssues.js";
 import core from "@actions/core";
 import getSummaryUrl from "../services/github/getSummaryUrl.js";
 import sleep from "./sleep.js";
+import { Comparison } from "./compareIssues.js";
 
-type CodeComparison = {
-  code: string;
-  new: Issue[];
-  fixed: Issue[];
-  retained: Issue[];
-};
+type CodeComparison = Comparison & { code: string };
 
 function getCodes(issues: Issue[]): string[] {
   return Array.from(new Set(issues.map((issue) => issue.code)));
@@ -55,13 +51,14 @@ async function getComparativeBody(
   }
 
   core.summary.addTable([
-    ["Code", "New", "Fixed", "Retained", "Total"],
+    ["Code", "New", "Fixed", "Retained", "Ignored", "Total"],
     ...data.map((d) => [
       d.code,
       d.new.length.toString(),
       d.fixed.length.toString(),
       d.retained.length.toString(),
-      (d.new.length + d.fixed.length + d.retained.length).toString(),
+      d.ignored.length.toString(),
+      (d.new.length + d.ignored.length + d.retained.length).toString(),
     ]),
   ]);
 

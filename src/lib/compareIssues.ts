@@ -6,6 +6,13 @@ type Options = {
   headIssues: Issue[];
 };
 
+export type Comparison = {
+  new: Issue[];
+  fixed: Issue[];
+  retained: Issue[];
+  ignored: Issue[];
+};
+
 function eq(a: Issue, b: Issue) {
   return a.code === b.code && a.selector === b.selector && a.url === b.url;
 }
@@ -13,12 +20,7 @@ function eq(a: Issue, b: Issue) {
 export default function compareIssues({
   baseIssues: base,
   headIssues: head,
-}: Options): {
-  new: Issue[];
-  fixed: Issue[];
-  retained: Issue[];
-  ignored: Issue[];
-} {
+}: Options): Comparison {
   const { ignore } = getInputs();
   const ignoreCodes = ignore.split(",").map((i) => i.trim());
 

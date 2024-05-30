@@ -17,7 +17,7 @@ inputs:
     description: "Only include URLs that match this regular expression"
     required: false
   ignore:
-    description: "A comma-seperated list of types and codes of issues to ignore"
+    description: "A comma-seperated list of codes of issues to ignore"
     required: false
 runs:
   using: "composite"

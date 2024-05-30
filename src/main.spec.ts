@@ -36,6 +36,7 @@ describe("main", () => {
       find: "the_find",
       replace: "the_replace",
       include: "2$",
+      ignore: "",
     });
 
     await main();
@@ -54,7 +55,10 @@ describe("main", () => {
 
     await main();
 
-    expect(pa11y).toBeCalledWith(expect.stringContaining("the_replace"));
+    expect(pa11y).toBeCalledWith(
+      expect.stringContaining("the_replace"),
+      expect.anything()
+    );
   });
 
   it("downloads base sha artifact", async () => {

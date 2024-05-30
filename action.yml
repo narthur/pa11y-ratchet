@@ -16,6 +16,9 @@ inputs:
   include:
     description: "Only include URLs that match this regular expression"
     required: false
+  ignore:
+    description: "A comma-seperated list of types and codes of issues to ignore"
+    required: false
 runs:
   using: "composite"
   steps:
@@ -39,3 +42,4 @@ runs:
         FIND: ${{ inputs.find }}
         REPLACE: ${{ inputs.replace }}
         INCLUDE: ${{ inputs.include }}
+        IGNORE: ${{ inputs.ignore }}

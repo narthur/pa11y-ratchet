@@ -1,4 +1,5 @@
 import pa11y from "pa11y";
+import getInputs from "./getInputs.js";
 
 export type Issue = {
   code: string;
@@ -12,13 +13,14 @@ export type Issue = {
 };
 
 export default async function scanUrls(urls: string[]): Promise<Issue[]> {
+  const { ignore } = getInputs();
   const issues = [];
   const len = urls.length;
 
   for (const [i, url] of urls.entries()) {
     const key = `${i + 1}/${len}: ${url}`;
     console.time(key);
-    const res = await pa11y(url).catch((err) => {
+    const res = await pa11y(url, { ignore: ignore.split(",") }).catch((err) => {
       console.error(err);
       return {
         issues: [

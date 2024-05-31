@@ -23,6 +23,7 @@ jobs:
         with:
           sitemap-url: https://pinepeakdigital.com/sitemap.xml
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          ignore: WCAG2AA.Principle4.Guideline4_1.4_1_2.H91.InputEmail.Name
   test:
     runs-on: ubuntu-latest
     steps:

@@ -36,6 +36,7 @@ describe("main", () => {
       find: "the_find",
       replace: "the_replace",
       include: "2$",
+      ignore: "",
     });
 
     await main();

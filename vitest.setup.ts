@@ -39,6 +39,7 @@ vi.mock("./src/lib/getInputs.js", () => ({
     find: "the_find",
     replace: "the_replace",
     include: "",
+    ignore: "",
   })),
 }));
 

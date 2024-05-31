@@ -3,11 +3,13 @@ export default function getInputs(): {
   find: string;
   replace: string;
   include: string;
+  ignore: string;
 } {
   return {
     sitemapUrl: process.env.SITEMAP_URL || "",
     find: process.env.FIND || "",
     replace: process.env.REPLACE || "",
     include: process.env.INCLUDE || "",
+    ignore: process.env.IGNORE || "",
   };
 }

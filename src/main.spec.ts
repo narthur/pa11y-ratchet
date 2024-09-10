@@ -37,6 +37,7 @@ describe("main", () => {
       replace: "the_replace",
       include: "2$",
       ignore: "",
+      configPath: "",
     });
 
     await main();
@@ -55,7 +56,24 @@ describe("main", () => {
 
     await main();
 
-    expect(pa11y).toBeCalledWith(expect.stringContaining("the_replace"));
+    expect(pa11y).toBeCalledWith(expect.stringContaining("the_replace"), {});
+  });
+
+  it("loads and uses the config file correctly", async () => {
+    vi.mocked(getInputs).mockReturnValue({
+      sitemapUrl: "the_sitemap-url",
+      find: "the_find",
+      replace: "the_replace",
+      include: "2$",
+      ignore: "",
+      configPath: "src/config.spec.json",
+    });
+
+    await main();
+
+    expect(pa11y).toBeCalledWith(expect.anything(), {
+      hideElements: 'iframe[src*="doubleclick.net"]',
+    });
   });
 
   it("downloads base sha artifact", async () => {

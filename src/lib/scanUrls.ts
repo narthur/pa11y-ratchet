@@ -1,4 +1,7 @@
+import * as fs from "node:fs/promises";
 import pa11y from "pa11y";
+import getInputs from "./getInputs.js";
+import path from "path";
 
 export type Issue = {
   code: string;
@@ -14,11 +17,19 @@ export type Issue = {
 export default async function scanUrls(urls: string[]): Promise<Issue[]> {
   const issues = [];
   const len = urls.length;
+  const { configPath } = getInputs();
+  const absConfigPath = path.resolve(configPath);
+
+  let pa11yOpts = {};
+  if (configPath !== "") {
+    const configJSON = await fs.readFile(absConfigPath, "utf8");
+    pa11yOpts = JSON.parse(configJSON);
+  }
 
   for (const [i, url] of urls.entries()) {
     const key = `${i + 1}/${len}: ${url}`;
     console.time(key);
-    const res = await pa11y(url).catch((err) => {
+    const res = await pa11y(url, pa11yOpts).catch((err) => {
       console.error(err);
       return {
         issues: [

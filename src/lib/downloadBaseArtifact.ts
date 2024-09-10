@@ -15,6 +15,11 @@ export default async function downloadBaseArtifact(): Promise<boolean> {
     return false;
   }
 
+  if (baseArtifact.expired) {
+    console.warn("Base artifact has expired");
+    return false;
+  }
+
   console.log("Downloading base artifact", baseArtifact.id, baseArtifact.name);
 
   await downloadArtifact({

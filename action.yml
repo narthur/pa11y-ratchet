@@ -19,6 +19,9 @@ inputs:
   ignore:
     description: "A comma-seperated list of codes of issues to ignore"
     required: false
+  config-path:
+    description: "Path to a pa11y configuration file"
+    required: false
 runs:
   using: "composite"
   steps:
@@ -43,3 +46,4 @@ runs:
         REPLACE: ${{ inputs.replace }}
         INCLUDE: ${{ inputs.include }}
         IGNORE: ${{ inputs.ignore }}
+        CONFIG_PATH: ${{ inputs.config-path }}

@@ -40,6 +40,7 @@ vi.mock("./src/lib/getInputs.js", () => ({
     replace: "the_replace",
     include: "",
     ignore: "",
+    configPath: "",
   })),
 }));
 

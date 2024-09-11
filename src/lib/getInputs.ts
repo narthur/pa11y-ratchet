@@ -4,6 +4,7 @@ export default function getInputs(): {
   replace: string;
   include: string;
   ignore: string;
+  configPath: string;
 } {
   return {
     sitemapUrl: process.env.SITEMAP_URL || "",
@@ -11,5 +12,6 @@ export default function getInputs(): {
     replace: process.env.REPLACE || "",
     include: process.env.INCLUDE || "",
     ignore: process.env.IGNORE || "",
+    configPath: process.env.CONFIG_PATH || "",
   };
 }

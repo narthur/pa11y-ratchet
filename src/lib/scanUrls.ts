@@ -30,7 +30,7 @@ export default async function scanUrls(urls: string[]): Promise<Issue[]> {
     const key = `${i + 1}/${len}: ${url}`;
     console.time(key);
     const res = await pa11y(url, pa11yOpts).catch((err) => {
-      console.error(err);
+      console.error(`Error scanning URL: ${url}`, err);
       return {
         issues: [
           {

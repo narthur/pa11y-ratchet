@@ -62,6 +62,19 @@ async function getComparativeBody(
     ]),
   ]);
 
+  core.summary.addTable([
+    ["Code", "Before", "After", "Net Change"],
+    ...data.map((d) => [
+      d.code,
+      baseIssues.filter((issue) => issue.code === d.code).length.toString(),
+      headIssues.filter((issue) => issue.code === d.code).length.toString(),
+      (
+        headIssues.filter((issue) => issue.code === d.code).length -
+        baseIssues.filter((issue) => issue.code === d.code).length
+      ).toString(),
+    ]),
+  ]);
+
   const summaryUrl = await getSummaryUrl();
 
   core.summary.addLink("View full summary", summaryUrl);

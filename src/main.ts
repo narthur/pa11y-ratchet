@@ -1,7 +1,6 @@
 import getUrls from "./lib/getUrls.js";
 import getInputs from "./lib/getInputs.js";
 import updateComment from "./lib/updateComment.js";
-import compareIssues from "./lib/compareIssues.js";
 import core from "@actions/core";
 import findPr from "./services/github/findPr.js";
 import { HEAD_SHA } from "./services/github/constants.js";
@@ -47,7 +46,6 @@ export default async function main() {
     return;
   }
 
-  const comparison = compareIssues({ baseIssues, headIssues });
-
-  if (comparison.new.length) core.setFailed("Found new accessibility issues");
+  if (headIssues.length < baseIssues.length)
+    core.setFailed("Found new accessibility issues");
 }

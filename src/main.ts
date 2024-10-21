@@ -1,6 +1,6 @@
 import getUrls from "./lib/getUrls.js";
 import getInputs from "./lib/getInputs.js";
-import updateComment from "./lib/updateComment.js";
+import updateComment, { getCodes } from "./lib/updateComment.js";
 import core from "@actions/core";
 import findPr from "./services/github/findPr.js";
 import { HEAD_SHA } from "./services/github/constants.js";
@@ -46,6 +46,10 @@ export default async function main() {
     return;
   }
 
-  if (headIssues.length < baseIssues.length)
-    core.setFailed("Found new accessibility issues");
+  const codes = getCodes([...baseIssues, ...headIssues]);
+
+  codes.forEach(async (code) => {
+    if (baseIssues.length < headIssues.length)
+      core.setFailed(`Found new accessibility issues for code: ${code}`);
+  });
 }

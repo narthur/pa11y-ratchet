@@ -84,9 +84,15 @@ describe("main", () => {
     );
   });
 
-  it("sets failed status if new issues found", async () => {
+  it.only("sets failed status if new issues found", async () => {
     vi.mocked(pa11y).mockResolvedValue({
-      issues: [{ message: "the_error_message", url: "https://the.url" }],
+      issues: [
+        {
+          message: "the_error_message",
+          url: "https://the.url",
+          code: "the_code",
+        },
+      ],
     } as any);
     vi.mocked(readCsv).mockResolvedValue([]);
 

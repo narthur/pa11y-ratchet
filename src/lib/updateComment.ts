@@ -8,7 +8,7 @@ import { Comparison } from "./compareIssues.js";
 
 type CodeComparison = Comparison & { code: string };
 
-function getCodes(issues: Issue[]): string[] {
+export function getCodes(issues: Issue[]): string[] {
   return Array.from(new Set(issues.map((issue) => issue.code)));
 }
 

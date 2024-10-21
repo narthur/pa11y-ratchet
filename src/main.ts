@@ -45,11 +45,18 @@ export default async function main() {
   if (!baseIssues) {
     return;
   }
-
   const codes = getCodes([...baseIssues, ...headIssues]);
 
+  console.log("basecodes", baseIssues, "headcodes", headIssues);
+
+  console.log("codes", codes);
+
   codes.forEach(async (code) => {
-    if (baseIssues.length < headIssues.length)
-      core.setFailed(`Found new accessibility issues for code: ${code}`);
+    if (
+      headIssues.filter((issue) => issue.code === code).length >
+      baseIssues.filter((issue) => issue.code === code).length
+    ) {
+      core.setFailed(`New ${code} issues detected`);
+    }
   });
 }

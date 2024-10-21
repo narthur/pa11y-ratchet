@@ -8,7 +8,7 @@ import { Comparison } from "./compareIssues.js";
 
 type CodeComparison = Comparison & { code: string };
 
-function getCodes(issues: Issue[]): string[] {
+export function getCodes(issues: Issue[]): string[] {
   return Array.from(new Set(issues.map((issue) => issue.code)));
 }
 
@@ -39,26 +39,16 @@ async function getComparativeBody(
 
   core.summary.addHeading("Accessibility Issues", 2);
 
-  const newCount = data.reduce((acc, d) => acc + d.new.length, 0);
-  const fixedCount = data.reduce((acc, d) => acc + d.fixed.length, 0);
-
-  if (newCount) {
-    core.summary.addRaw(`⚠️ ${newCount} new issues found!\n`);
-  }
-
-  if (fixedCount) {
-    core.summary.addRaw(`✅ ${fixedCount} issues fixed!\n`);
-  }
-
   core.summary.addTable([
-    ["Code", "New", "Fixed", "Retained", "Ignored", "Total"],
+    ["Code", "Before", "After", "Net Change"],
     ...data.map((d) => [
       d.code,
-      d.new.length.toString(),
-      d.fixed.length.toString(),
-      d.retained.length.toString(),
-      d.ignored.length.toString(),
-      (d.new.length + d.ignored.length + d.retained.length).toString(),
+      baseIssues.filter((issue) => issue.code === d.code).length.toString(),
+      headIssues.filter((issue) => issue.code === d.code).length.toString(),
+      (
+        headIssues.filter((issue) => issue.code === d.code).length -
+        baseIssues.filter((issue) => issue.code === d.code).length
+      ).toString(),
     ]),
   ]);
 

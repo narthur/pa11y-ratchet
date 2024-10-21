@@ -86,7 +86,13 @@ describe("main", () => {
 
   it("sets failed status if new issues found", async () => {
     vi.mocked(pa11y).mockResolvedValue({
-      issues: [{ message: "the_error_message", url: "https://the.url" }],
+      issues: [
+        {
+          message: "the_error_message",
+          url: "https://the.url",
+          code: "the_code",
+        },
+      ],
     } as any);
     vi.mocked(readCsv).mockResolvedValue([]);
 
@@ -137,5 +143,31 @@ describe("main", () => {
     await main();
 
     expect(core.setFailed).not.toBeCalled();
+  });
+
+  it("fails if the total issues is the same, but new issues are found for a code", async () => {
+    vi.mocked(readCsv).mockResolvedValue([
+      { code: "the_old_code" },
+      { code: "the_code" },
+    ]);
+
+    vi.mocked(pa11y).mockResolvedValueOnce({
+      issues: [
+        {
+          message: "the_error_message",
+          url: "https://the.url",
+          code: "the_code",
+        },
+        {
+          message: "the_error_message",
+          url: "https://the.url",
+          code: "the_code",
+        },
+      ],
+    } as any);
+
+    await main();
+
+    expect(core.setFailed).toBeCalled();
   });
 });

@@ -1,7 +1,6 @@
 import getUrls from "./lib/getUrls.js";
 import getInputs from "./lib/getInputs.js";
-import updateComment from "./lib/updateComment.js";
-import compareIssues from "./lib/compareIssues.js";
+import updateComment, { getCodes } from "./lib/updateComment.js";
 import core from "@actions/core";
 import findPr from "./services/github/findPr.js";
 import { HEAD_SHA } from "./services/github/constants.js";
@@ -46,8 +45,18 @@ export default async function main() {
   if (!baseIssues) {
     return;
   }
+  const codes = getCodes([...baseIssues, ...headIssues]);
 
-  const comparison = compareIssues({ baseIssues, headIssues });
+  console.log("basecodes", baseIssues, "headcodes", headIssues);
 
-  if (comparison.new.length) core.setFailed("Found new accessibility issues");
+  console.log("codes", codes);
+
+  codes.forEach(async (code) => {
+    if (
+      headIssues.filter((issue) => issue.code === code).length >
+      baseIssues.filter((issue) => issue.code === code).length
+    ) {
+      core.setFailed(`New ${code} issues detected`);
+    }
+  });
 }

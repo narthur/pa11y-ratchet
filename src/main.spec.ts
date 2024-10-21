@@ -84,7 +84,7 @@ describe("main", () => {
     );
   });
 
-  it.only("sets failed status if new issues found", async () => {
+  it("sets failed status if new issues found", async () => {
     vi.mocked(pa11y).mockResolvedValue({
       issues: [
         {

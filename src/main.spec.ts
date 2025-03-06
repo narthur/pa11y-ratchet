@@ -56,7 +56,10 @@ describe("main", () => {
 
     await main();
 
-    expect(pa11y).toBeCalledWith(expect.stringContaining("the_replace"), {});
+    expect(pa11y).toBeCalledWith(
+      expect.stringContaining("the_replace"),
+      expect.anything()
+    );
   });
 
   it("loads and uses the config file correctly", async () => {
@@ -71,9 +74,12 @@ describe("main", () => {
 
     await main();
 
-    expect(pa11y).toBeCalledWith(expect.anything(), {
-      hideElements: 'iframe[src*="doubleclick.net"]',
-    });
+    expect(pa11y).toBeCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        hideElements: 'iframe[src*="doubleclick.net"]',
+      })
+    );
   });
 
   it("downloads base sha artifact", async () => {

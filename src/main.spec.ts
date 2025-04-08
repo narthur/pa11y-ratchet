@@ -176,4 +176,12 @@ describe("main", () => {
 
     expect(core.setFailed).toBeCalled();
   });
+
+  it("fails immediately if pa11y returns an error issue, without comparing to base", async () => {
+    vi.mocked(pa11y).mockRejectedValue(new Error("the_error_message"));
+
+    await expect(main()).rejects.toThrow("the_error_message");
+
+    expect(downloadArtifact).not.toBeCalled();
+  });
 });

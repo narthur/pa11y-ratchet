@@ -102,3 +102,5 @@ vi.mock("node-fetch", () => ({
 vi.mock("pa11y", () => ({
   default: vi.fn(() => Promise.resolve({ issues: [] })),
 }));
+
+vi.mock("p-throttle");

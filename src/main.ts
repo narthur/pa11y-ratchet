@@ -31,14 +31,6 @@ export default async function main() {
 
   const headIssues = await scanUrls(urls);
 
-  // Fail fast if any URLs returned error responses
-  const errorIssues = headIssues.filter(issue => issue.code === 'error');
-  if (errorIssues.length > 0) {
-    const urls = errorIssues.map(issue => issue.url).join(', ');
-    core.setFailed(`Failed to scan URLs: ${urls}`);
-    return;
-  }
-
   const { id } = await uploadIssues(headIssues, headSha);
 
   if (!id) {

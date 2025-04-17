@@ -51,10 +51,16 @@ export default async function main() {
 
   console.log("codes", codes);
 
+  const ignoredCodes = inputs.ignore.split(",").map((i) => i.trim());
+
   codes.forEach(async (code) => {
+    if (ignoredCodes.includes(code)) {
+      return;
+    }
+
     if (
-      headIssues.filter((issue) => issue.code === code).length >
-      baseIssues.filter((issue) => issue.code === code).length
+      headIssues.filter((v) => v.code === code).length >
+      baseIssues.filter((v) => v.code === code).length
     ) {
       core.setFailed(`New ${code} issues detected`);
     }

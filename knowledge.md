@@ -12,11 +12,12 @@ Pa11y Ratchet is a GitHub Action that helps detect newly-introduced accessibilit
 ## Workflow
 1. Retrieves URLs from a sitemap
 2. Scans URLs for accessibility issues using Pa11y
-3. Uploads issues as artifacts
-4. Retrieves base branch issues for comparison
-5. Updates PR comment with comparison results
-6. Updates summary with issue details
-7. Fails if new issues are detected
+3. Fails immediately if any URLs return error responses (e.g. 404, 500)
+4. Uploads issues as artifacts
+5. Retrieves base branch issues for comparison
+6. Updates PR comment with comparison results
+7. Updates summary with issue details
+8. Fails if new issues are detected
 
 ## Development Guidelines
 - Use `pnpm` as the package manager

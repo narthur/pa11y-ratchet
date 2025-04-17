@@ -176,4 +176,39 @@ describe("main", () => {
 
     expect(core.setFailed).toBeCalled();
   });
+
+  it("fails immediately if pa11y returns an error issue, without comparing to base", async () => {
+    vi.mocked(pa11y).mockRejectedValue(new Error("the_error_message"));
+
+    await expect(main()).rejects.toThrow("the_error_message");
+
+    expect(downloadArtifact).not.toBeCalled();
+  });
+
+  it("does not fail on ignored code", async () => {
+    vi.mocked(readCsv).mockResolvedValue([]);
+
+    vi.mocked(getInputs).mockReturnValue({
+      ignore: "the_ignored_code",
+      sitemapUrl: "the_sitemap-url",
+      find: "the_find",
+      replace: "the_replace",
+      include: "2$",
+      configPath: "",
+    } as any);
+
+    vi.mocked(pa11y).mockResolvedValue({
+      issues: [
+        {
+          code: "the_ignored_code",
+          message: "the_error_message",
+          url: "https://the.url",
+        },
+      ],
+    } as any);
+
+    await main();
+
+    expect(core.setFailed).not.toBeCalled();
+  });
 });

@@ -8,6 +8,7 @@ import scanUrls from "./lib/scanUrls.js";
 import uploadIssues from "./lib/uploadIssues.js";
 import retrieveIssues from "./lib/retrieveIssues.js";
 import updateSummary from "./lib/updateSummary.js";
+import { getIgnoredCodes } from "./lib/getIgnoredCodes.js";
 
 export default async function main() {
   const pr = await findPr();
@@ -51,7 +52,7 @@ export default async function main() {
 
   console.log("codes", codes);
 
-  const ignoredCodes = inputs.ignore.split(",").map((i) => i.trim());
+  const ignoredCodes = getIgnoredCodes();
 
   codes.forEach(async (code) => {
     if (ignoredCodes.includes(code)) {

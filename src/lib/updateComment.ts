@@ -5,6 +5,7 @@ import core from "@actions/core";
 import getSummaryUrl from "../services/github/getSummaryUrl.js";
 import sleep from "./sleep.js";
 import { Comparison } from "./compareIssues.js";
+import { getIgnoredCodes } from "./getIgnoredCodes.js";
 
 type CodeComparison = Comparison & { code: string };
 
@@ -31,7 +32,6 @@ async function getComparativeBody(
   headIssues: Issue[]
 ): Promise<string> {
   const data = getCodeComparisons(baseIssues, headIssues);
-
   core.summary.emptyBuffer();
 
   // WORKAROUND: Wait for buffer to be emptied
@@ -88,9 +88,19 @@ export default async function updateComment(
   baseIssues: Issue[] | undefined,
   headIssues: Issue[]
 ) {
-  const body = baseIssues
+  let body = baseIssues
     ? await getComparativeBody(baseIssues, headIssues)
     : await getHeadBody(headIssues);
+
+  const ignoredCodes = getIgnoredCodes();
+
+  if (ignoredCodes.length > 0) {
+    body += `\n\nThe following codes are ignored, and will not result in a CI failure:\n`;
+    ignoredCodes.forEach((code) => {
+      body += `\n-${code}`;
+    });
+    body += `\n\nIf any of these codes are not present in the PR, please consider removing them from the ignore list.`;
+  }
 
   await upsertComment(body);
 }

@@ -73,4 +73,17 @@ describe("compareIssues", () => {
 
     expect(result.retained).toHaveLength(0);
   });
+
+  it("handles multiple ignored codes", async () => {
+    vi.mocked(getInputs).mockReturnValue({
+      ignore: "the_ignored_code_1,the_ignored_code_2",
+    } as any);
+
+    const result = compareIssues({
+      headIssues: [{ code: "the_ignored_code_1", context: "new" }],
+      baseIssues: [],
+    } as any);
+
+    expect(result.new).toHaveLength(0);
+  });
 });

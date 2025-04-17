@@ -13,6 +13,36 @@ export function getCodes(issues: Issue[]): string[] {
   return Array.from(new Set(issues.map((issue) => issue.code)));
 }
 
+type Summary = typeof core.summary;
+
+function addIgnoredCodes(summary: Summary, headIssues: Issue[]) {
+  const ignoredCodes = getIgnoredCodes();
+
+  if (!ignoredCodes.length) {
+    return;
+  }
+
+  const codesResolved = ignoredCodes.filter(
+    (code) => !headIssues.some((issue) => issue.code === code)
+  );
+
+  summary.addHeading("Ignored Codes", 2);
+
+  summary.addRaw(
+    `The following codes are ignored, and will not result in a CI failure.`
+  );
+
+  summary.addList(ignoredCodes);
+
+  if (codesResolved.length) {
+    summary.addRaw(
+      `The following ignored codes were not found in the PR. Please consider removing them from the list of ignored codes.`
+    );
+
+    summary.addList(codesResolved);
+  }
+}
+
 function getCodeComparisons(
   baseIssues: Issue[],
   headIssues: Issue[]
@@ -52,6 +82,8 @@ async function getComparativeBody(
     ]),
   ]);
 
+  addIgnoredCodes(core.summary, headIssues);
+
   const summaryUrl = await getSummaryUrl();
 
   core.summary.addLink("View full summary", summaryUrl);
@@ -77,6 +109,8 @@ async function getHeadBody(headIssues: Issue[]): Promise<string> {
     ]),
   ]);
 
+  addIgnoredCodes(core.summary, headIssues);
+
   const summaryUrl = await getSummaryUrl();
 
   core.summary.addLink("View full summary", summaryUrl);
@@ -88,19 +122,9 @@ export default async function updateComment(
   baseIssues: Issue[] | undefined,
   headIssues: Issue[]
 ) {
-  let body = baseIssues
+  const body = baseIssues
     ? await getComparativeBody(baseIssues, headIssues)
     : await getHeadBody(headIssues);
-
-  const ignoredCodes = getIgnoredCodes();
-
-  if (ignoredCodes.length > 0) {
-    body += `\n\nThe following codes are ignored, and will not result in a CI failure:\n`;
-    ignoredCodes.forEach((code) => {
-      body += `\n-${code}`;
-    });
-    body += `\n\nIf any of these codes are not present in the PR, please consider removing them from the ignore list.`;
-  }
 
   await upsertComment(body);
 }

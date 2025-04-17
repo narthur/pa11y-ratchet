@@ -33,6 +33,7 @@ function addIgnoredCodes(summary: Summary, headIssues: Issue[]) {
   );
 
   summary.addEOL();
+  summary.addEOL();
 
   summary.addList(ignoredCodes);
 
@@ -42,7 +43,7 @@ function addIgnoredCodes(summary: Summary, headIssues: Issue[]) {
     );
 
     summary.addEOL();
-
+    summary.addEOL();
     summary.addList(codesResolved);
   }
 }

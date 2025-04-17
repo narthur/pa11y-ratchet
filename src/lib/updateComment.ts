@@ -29,14 +29,14 @@ function addIgnoredCodes(summary: Summary, headIssues: Issue[]) {
   summary.addHeading("Ignored Codes", 2);
 
   summary.addRaw(
-    `The following codes are ignored, and will not result in a CI failure.\n`
+    `The following codes are ignored, and will not result in a CI failure.\n\n`
   );
 
   summary.addList(ignoredCodes);
 
   if (codesResolved.length) {
     summary.addRaw(
-      `The following ignored codes were not found in the PR. Please consider removing them from the list of ignored codes.\n`
+      `The following ignored codes were not found in this PR. Please consider removing them from the list of ignored codes.\n\n`
     );
 
     summary.addList(codesResolved);
@@ -82,11 +82,11 @@ async function getComparativeBody(
     ]),
   ]);
 
-  addIgnoredCodes(core.summary, headIssues);
-
   const summaryUrl = await getSummaryUrl();
 
   core.summary.addLink("View full summary", summaryUrl);
+
+  addIgnoredCodes(core.summary, headIssues);
 
   return core.summary.stringify();
 }
@@ -109,11 +109,11 @@ async function getHeadBody(headIssues: Issue[]): Promise<string> {
     ]),
   ]);
 
-  addIgnoredCodes(core.summary, headIssues);
-
   const summaryUrl = await getSummaryUrl();
 
   core.summary.addLink("View full summary", summaryUrl);
+
+  addIgnoredCodes(core.summary, headIssues);
 
   return core.summary.stringify();
 }

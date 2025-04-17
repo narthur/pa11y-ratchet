@@ -29,21 +29,16 @@ function addIgnoredCodes(summary: Summary, headIssues: Issue[]) {
   summary.addHeading("Ignored Codes", 2);
 
   summary.addRaw(
-    `The following codes are ignored, and will not result in a CI failure.`
+    `<p>The following codes are ignored, and will not result in a CI failure.</p>`
   );
-
-  summary.addEOL();
-  summary.addEOL();
 
   summary.addList(ignoredCodes);
 
   if (codesResolved.length) {
     summary.addRaw(
-      `The following ignored codes were not found in this PR. Please consider removing them from the list of ignored codes.`
+      `<p>The following ignored codes were not found in this PR. Please consider removing them from the list of ignored codes.</p>`
     );
 
-    summary.addEOL();
-    summary.addEOL();
     summary.addList(codesResolved);
   }
 }

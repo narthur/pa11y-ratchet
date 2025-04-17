@@ -5,11 +5,42 @@ import core from "@actions/core";
 import getSummaryUrl from "../services/github/getSummaryUrl.js";
 import sleep from "./sleep.js";
 import { Comparison } from "./compareIssues.js";
+import { getIgnoredCodes } from "./getIgnoredCodes.js";
 
 type CodeComparison = Comparison & { code: string };
 
 export function getCodes(issues: Issue[]): string[] {
   return Array.from(new Set(issues.map((issue) => issue.code)));
+}
+
+type Summary = typeof core.summary;
+
+function addIgnoredCodes(summary: Summary, headIssues: Issue[]) {
+  const ignoredCodes = getIgnoredCodes();
+
+  if (!ignoredCodes.length) {
+    return;
+  }
+
+  const codesResolved = ignoredCodes.filter(
+    (code) => !headIssues.some((issue) => issue.code === code)
+  );
+
+  summary.addHeading("Ignored Codes", 2);
+
+  summary.addRaw(
+    `<p>The following codes are ignored, and will not result in a CI failure.</p>`
+  );
+
+  summary.addList(ignoredCodes);
+
+  if (codesResolved.length) {
+    summary.addRaw(
+      `<p>The following ignored codes were not found in this PR. Please consider removing them from the list of ignored codes.</p>`
+    );
+
+    summary.addList(codesResolved);
+  }
 }
 
 function getCodeComparisons(
@@ -31,7 +62,6 @@ async function getComparativeBody(
   headIssues: Issue[]
 ): Promise<string> {
   const data = getCodeComparisons(baseIssues, headIssues);
-
   core.summary.emptyBuffer();
 
   // WORKAROUND: Wait for buffer to be emptied
@@ -55,6 +85,8 @@ async function getComparativeBody(
   const summaryUrl = await getSummaryUrl();
 
   core.summary.addLink("View full summary", summaryUrl);
+
+  addIgnoredCodes(core.summary, headIssues);
 
   return core.summary.stringify();
 }
@@ -80,6 +112,8 @@ async function getHeadBody(headIssues: Issue[]): Promise<string> {
   const summaryUrl = await getSummaryUrl();
 
   core.summary.addLink("View full summary", summaryUrl);
+
+  addIgnoredCodes(core.summary, headIssues);
 
   return core.summary.stringify();
 }

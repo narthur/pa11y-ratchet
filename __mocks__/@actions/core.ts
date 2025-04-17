@@ -19,6 +19,7 @@ export default {
     }),
     addQuote: vi.fn((s: string) => (summary += `> ${s}\n`)),
     write: vi.fn(() => {}),
+    addEOL: vi.fn(() => (summary += "\n")),
   },
   setFailed: vi.fn(),
   setOutput: vi.fn(),

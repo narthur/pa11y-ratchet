@@ -5,28 +5,44 @@ on:
     branches:
       - main
 jobs:
-  check-version:
+  check-version-and-docs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - name: Get base package.json
+      - name: Get base files
         run: |
           curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                -H "Accept: application/vnd.github.v3.raw" \
                -o base-package.json \
                "https://api.github.com/repos/${{ github.repository }}/contents/package.json?ref=${{ github.base_ref }}"
-      - name: Compare versions
+          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+               -H "Accept: application/vnd.github.v3.raw" \
+               -o base-readme.md \
+               "https://api.github.com/repos/${{ github.repository }}/contents/README.md?ref=${{ github.base_ref }}"
+      - name: Check version type and README updates
         run: |
           BASE_VERSION=$(node -p "require('./base-package.json').version")
           CURRENT_VERSION=$(node -p "require('./package.json').version")
-          if [ "$BASE_VERSION" == "$CURRENT_VERSION" ]; then
-            echo "Error: Version in package.json must be updated"
-            exit 1
+          
+          # Split versions into components
+          IFS='.' read -r base_major base_minor base_patch <<< "$BASE_VERSION"
+          IFS='.' read -r curr_major curr_minor curr_patch <<< "$CURRENT_VERSION"
+          
+          # Check if version change is more than patch
+          if [ "$base_major" != "$curr_major" ] || [ "$base_minor" != "$curr_minor" ]; then
+            # For major/minor changes, check if README was updated
+            if cmp -s "README.md" "base-readme.md"; then
+              echo "Error: Non-patch version change ($BASE_VERSION → $CURRENT_VERSION) detected but README.md was not updated"
+              exit 1
+            else
+              echo "Version change ($BASE_VERSION → $CURRENT_VERSION) with README updates - OK"
+            fi
+          else
+            echo "Patch version change only - no README check required"
           fi
-          echo "Version changed from $BASE_VERSION to $CURRENT_VERSION"
   run-action:
     runs-on: ubuntu-latest
     permissions:

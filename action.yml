@@ -1,4 +1,8 @@
 name: "Pa11y Ratchet"
+author: "Nathan Arthur"
+branding:
+  icon: "check"
+  color: "green"
 description: "Fail if Pa11y detects newly-introduced accessibility issues"
 inputs:
   sitemap-url:

@@ -28,11 +28,13 @@ jobs:
           
           # Create main version release with auto-generated notes
           gh release create v$VER \
+            --latest \
             --title "$PACKAGE_NAME v$VER" \
             --generate-notes
           
           # Create major version release
           gh release delete v$VER_SHORT --yes --cleanup-tag || true
           gh release create v$VER_SHORT \
+            --latest=false \
             --title "$PACKAGE_NAME v$VER_SHORT (Latest $VER_SHORT.x)" \
             --notes "This is an alias release that always points to the latest $VER_SHORT.x version. Current version: v$VER"

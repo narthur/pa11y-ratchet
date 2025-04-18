@@ -26,6 +26,11 @@ jobs:
         run: |
           BASE_VERSION=$(node -p "require('./base-package.json').version")
           CURRENT_VERSION=$(node -p "require('./package.json').version")
+
+          if [ "$BASE_VERSION" == "$CURRENT_VERSION" ]; then
+            echo "Error: Version in package.json must be updated"
+            exit 1
+          fi
           
           # Split versions into components
           IFS='.' read -r base_major base_minor base_patch <<< "$BASE_VERSION"

@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for generating release notes
       - uses: actions/setup-node@v4
       - uses: pnpm/action-setup@v4
         with:
@@ -22,6 +24,15 @@ jobs:
         run: |
           VER=$(node -p "require('./package.json').version")
           VER_SHORT=$(echo $VER | cut -d. -f1)
-          gh release create v$VER
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          
+          # Create main version release with auto-generated notes
+          gh release create v$VER \
+            --title "$PACKAGE_NAME v$VER" \
+            --generate-notes
+          
+          # Create major version release
           gh release delete v$VER_SHORT --yes --cleanup-tag || true
-          gh release create v$VER_SHORT
+          gh release create v$VER_SHORT \
+            --title "$PACKAGE_NAME v$VER_SHORT (Latest $VER_SHORT.x)" \
+            --notes "This is an alias release that always points to the latest $VER_SHORT.x version. Current version: v$VER"

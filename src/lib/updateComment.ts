@@ -9,28 +9,23 @@ import { getIgnoredCodes } from "./getIgnoredCodes.js";
 import { getCodes } from "./getCodes.js";
 
 function addSummary(baseIssues: Issue[] | undefined, headIssues: Issue[]) {
-  if (!baseIssues) {
-    core.summary.addRaw(`<p>No baseline issues found.</p>`);
-    return;
-  }
-
-  const baseLen = baseIssues.length;
+  const baseLen = baseIssues?.length;
   const headLen = headIssues.length;
 
-  if (baseLen === headLen) {
+  if (!baseLen) {
+    core.summary.addRaw(`<p>No baseline issues found.</p>`);
+  } else if (baseLen === headLen) {
     core.summary.addRaw(`<p>Issue count is the same as the baseline.</p>`);
-  }
-
-  if (baseLen > headLen) {
+  } else if (baseLen > headLen) {
     core.summary.addRaw(`<p>🎉 Issue count is less than the baseline!</p>`);
-  }
-
-  if (baseLen < headLen) {
+  } else if (baseLen < headLen) {
     core.summary.addRaw(`<p>🚨 Issue count is greater than the baseline.</p>`);
   }
 
-  core.summary.addRaw(`<p>Baseline issues: ${baseLen}</p>`);
-  core.summary.addRaw(`<p>Head issues: ${headLen}</p>`);
+  core.summary.addTable([
+    ["Baseline", "Head"],
+    [baseLen?.toString() ?? "-", headLen.toString()],
+  ]);
 }
 
 function addIgnoredCodes(headIssues: Issue[]) {

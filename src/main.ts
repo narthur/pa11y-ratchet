@@ -1,6 +1,7 @@
 import getUrls from "./lib/getUrls.js";
 import getInputs from "./lib/getInputs.js";
-import updateComment, { getCodes } from "./lib/updateComment.js";
+import updateComment from "./lib/updateComment.js";
+import { getCodes } from "./lib/getCodes.js";
 import core from "@actions/core";
 import findPr from "./services/github/findPr.js";
 import { HEAD_SHA } from "./services/github/constants.js";

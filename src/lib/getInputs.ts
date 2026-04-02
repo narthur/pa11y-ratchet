@@ -1,5 +1,6 @@
 export default function getInputs(): {
   sitemapUrl: string;
+  urls: string;
   find: string;
   replace: string;
   include: string;
@@ -8,6 +9,7 @@ export default function getInputs(): {
 } {
   return {
     sitemapUrl: process.env.SITEMAP_URL || "",
+    urls: process.env.URLS || "",
     find: process.env.FIND || "",
     replace: process.env.REPLACE || "",
     include: process.env.INCLUDE || "",

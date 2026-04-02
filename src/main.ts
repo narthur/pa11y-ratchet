@@ -25,11 +25,19 @@ export default async function main() {
     throw new Error("GITHUB_WORKSPACE not set");
   }
 
-  const urls = await getUrls(inputs.sitemapUrl).then((urls: string[]) =>
-    urls
-      .filter((url: string) => includeRegex.test(url))
-      .map((url: string) => url.replace(inputs.find, inputs.replace))
-  );
+  let rawUrls: string[];
+
+  if (inputs.urls) {
+    rawUrls = inputs.urls.split("\n").map((u) => u.trim()).filter(Boolean);
+  } else if (inputs.sitemapUrl) {
+    rawUrls = await getUrls(inputs.sitemapUrl);
+  } else {
+    throw new Error("Either sitemap-url or urls input must be provided");
+  }
+
+  const urls = rawUrls
+    .filter((url: string) => includeRegex.test(url))
+    .map((url: string) => url.replace(inputs.find, inputs.replace));
 
   const headIssues = await scanUrls(urls);
 

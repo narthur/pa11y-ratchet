@@ -6,8 +6,11 @@ branding:
 description: "Fail if Pa11y detects newly-introduced accessibility issues"
 inputs:
   sitemap-url:
-    description: "The sitemap URL to test"
-    required: true
+    description: "The sitemap URL to test. Required unless urls is provided."
+    required: false
+  urls:
+    description: "A newline-separated list of URLs to test. Use this instead of sitemap-url to provide URLs directly."
+    required: false
   github-token:
     description: "The GitHub token for the repository"
     required: true
@@ -48,6 +51,7 @@ runs:
         script: await import("${{ github.action_path }}/index.js")
       env:
         SITEMAP_URL: ${{ inputs.sitemap-url }}
+        URLS: ${{ inputs.urls }}
         GITHUB_TOKEN: ${{ inputs.github-token }}
         FIND: ${{ inputs.find }}
         REPLACE: ${{ inputs.replace }}

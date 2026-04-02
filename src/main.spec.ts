@@ -101,6 +101,27 @@ describe("main", () => {
     expect(pa11y).toBeCalledTimes(2);
   });
 
+  it("applies include/find/replace to urls input", async () => {
+    vi.mocked(getInputs).mockReturnValue({
+      sitemapUrl: "",
+      urls: "https://example.com/home\nhttps://example.com/about",
+      find: "about",
+      replace: "team",
+      include: "about$",
+      ignore: "",
+      configPath: "",
+    });
+
+    await main();
+
+    expect(getUrls).not.toBeCalled();
+    expect(pa11y).toBeCalledTimes(1);
+    expect(pa11y).toBeCalledWith(
+      "https://example.com/team",
+      expect.anything()
+    );
+  });
+
   it("throws if neither sitemap-url nor urls is provided", async () => {
     vi.mocked(getInputs).mockReturnValue({
       sitemapUrl: "",

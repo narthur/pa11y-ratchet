@@ -28,7 +28,13 @@ export default async function main() {
   let rawUrls: string[];
 
   if (inputs.urls) {
-    rawUrls = inputs.urls.split("\n").map((u) => u.trim()).filter(Boolean);
+    rawUrls = inputs.urls
+      .split(/\r?\n/)
+      .map((u) => u.trim())
+      .filter(Boolean);
+    if (rawUrls.length === 0) {
+      throw new Error("urls input was provided but no valid URLs were found");
+    }
   } else if (inputs.sitemapUrl) {
     rawUrls = await getUrls(inputs.sitemapUrl);
   } else {

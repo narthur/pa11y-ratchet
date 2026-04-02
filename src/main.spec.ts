@@ -84,6 +84,39 @@ describe("main", () => {
     );
   });
 
+  it("uses urls input and skips sitemap fetch", async () => {
+    vi.mocked(getInputs).mockReturnValue({
+      sitemapUrl: "the_sitemap-url",
+      urls: "https://example.com/\nhttps://example.com/about",
+      find: "",
+      replace: "",
+      include: "",
+      ignore: "",
+      configPath: "",
+    });
+
+    await main();
+
+    expect(getUrls).not.toBeCalled();
+    expect(pa11y).toBeCalledTimes(2);
+  });
+
+  it("throws if neither sitemap-url nor urls is provided", async () => {
+    vi.mocked(getInputs).mockReturnValue({
+      sitemapUrl: "",
+      urls: "",
+      find: "",
+      replace: "",
+      include: "",
+      ignore: "",
+      configPath: "",
+    });
+
+    await expect(main()).rejects.toThrow(
+      "Either sitemap-url or urls input must be provided"
+    );
+  });
+
   it("downloads base sha artifact", async () => {
     await main();
 

@@ -33,6 +33,7 @@ describe("main", () => {
   it("filters by include input", async () => {
     vi.mocked(getInputs).mockReturnValue({
       sitemapUrl: "the_sitemap-url",
+      urls: "",
       find: "the_find",
       replace: "the_replace",
       include: "2$",
@@ -65,6 +66,7 @@ describe("main", () => {
   it("loads and uses the config file correctly", async () => {
     vi.mocked(getInputs).mockReturnValue({
       sitemapUrl: "the_sitemap-url",
+      urls: "",
       find: "the_find",
       replace: "the_replace",
       include: "2$",

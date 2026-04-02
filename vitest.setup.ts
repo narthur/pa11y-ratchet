@@ -36,6 +36,7 @@ vi.mock("@actions/github", () => ({
 vi.mock("./src/lib/getInputs.js", () => ({
   default: vi.fn(() => ({
     sitemapUrl: "the_sitemap-url",
+    urls: "",
     find: "the_find",
     replace: "the_replace",
     include: "",

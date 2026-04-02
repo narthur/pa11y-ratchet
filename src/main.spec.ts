@@ -136,6 +136,8 @@ describe("main", () => {
     await expect(main()).rejects.toThrow(
       "Either sitemap-url or urls input must be provided"
     );
+    expect(getUrls).not.toBeCalled();
+    expect(pa11y).not.toBeCalled();
   });
 
   it("downloads base sha artifact", async () => {

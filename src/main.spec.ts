@@ -33,6 +33,7 @@ describe("main", () => {
   it("filters by include input", async () => {
     vi.mocked(getInputs).mockReturnValue({
       sitemapUrl: "the_sitemap-url",
+      urls: "",
       find: "the_find",
       replace: "the_replace",
       include: "2$",
@@ -65,6 +66,7 @@ describe("main", () => {
   it("loads and uses the config file correctly", async () => {
     vi.mocked(getInputs).mockReturnValue({
       sitemapUrl: "the_sitemap-url",
+      urls: "",
       find: "the_find",
       replace: "the_replace",
       include: "2$",
@@ -80,6 +82,62 @@ describe("main", () => {
         hideElements: 'iframe[src*="doubleclick.net"]',
       })
     );
+  });
+
+  it("uses urls input and skips sitemap fetch", async () => {
+    vi.mocked(getInputs).mockReturnValue({
+      sitemapUrl: "the_sitemap-url",
+      urls: "https://example.com/\nhttps://example.com/about",
+      find: "",
+      replace: "",
+      include: "",
+      ignore: "",
+      configPath: "",
+    });
+
+    await main();
+
+    expect(getUrls).not.toBeCalled();
+    expect(pa11y).toBeCalledTimes(2);
+  });
+
+  it("applies include/find/replace to urls input", async () => {
+    vi.mocked(getInputs).mockReturnValue({
+      sitemapUrl: "",
+      urls: "https://example.com/home\nhttps://example.com/about",
+      find: "about",
+      replace: "team",
+      include: "about$",
+      ignore: "",
+      configPath: "",
+    });
+
+    await main();
+
+    expect(getUrls).not.toBeCalled();
+    expect(pa11y).toBeCalledTimes(1);
+    expect(pa11y).toBeCalledWith(
+      "https://example.com/team",
+      expect.anything()
+    );
+  });
+
+  it("throws if neither sitemap-url nor urls is provided", async () => {
+    vi.mocked(getInputs).mockReturnValue({
+      sitemapUrl: "",
+      urls: "",
+      find: "",
+      replace: "",
+      include: "",
+      ignore: "",
+      configPath: "",
+    });
+
+    await expect(main()).rejects.toThrow(
+      "Either sitemap-url or urls input must be provided"
+    );
+    expect(getUrls).not.toBeCalled();
+    expect(pa11y).not.toBeCalled();
   });
 
   it("downloads base sha artifact", async () => {

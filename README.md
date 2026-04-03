@@ -7,7 +7,7 @@ A GitHub Action that helps prevent the introduction of new accessibility issues.
 - 🔍 Scans your site using [Pa11y](https://pa11y.org/), a powerful accessibility testing tool
 - 📊 Provides detailed reports of accessibility issues in PR comments
 - 🚫 Prevents merging when new accessibility issues are introduced
-- 🗺️ Supports scanning multiple URLs via sitemap
+- 🗺️ Supports scanning multiple URLs via sitemap or explicit URL list
 - ⚙️ Configurable URL filtering and issue ignoring
 - 📝 Generates GitHub summary reports with issue details
 
@@ -33,13 +33,28 @@ jobs:
 
 | Name | Description | Required | Default |
 |------|-------------|----------|---------|
-| `sitemap-url` | URL of the sitemap to scan | Yes | - |
+| `sitemap-url` | URL of the sitemap to scan | No* | - |
+| `urls` | Newline-separated list of URLs to scan | No* | - |
 | `github-token` | GitHub token for PR comments | Yes | - |
 | `find` | URL substring to search for | No | - |
 | `replace` | Replacement for found substring | No | - |
 | `include` | Regex pattern to filter URLs | No | - |
 | `ignore` | Comma-separated list of issue codes to ignore | No | - |
 | `config-path` | Path to Pa11y configuration file | No | - |
+
+\* Either `sitemap-url` or `urls` must be provided.
+
+## Example with URL List
+
+```yaml
+- uses: narthur/pa11y-ratchet@v3
+  with:
+    urls: |
+      https://example.com/
+      https://example.com/about
+      https://example.com/contact
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+```
 
 ## Example with All Options
 
@@ -57,7 +72,7 @@ jobs:
 
 ## How It Works
 
-1. Retrieves URLs from your sitemap
+1. Retrieves URLs from your sitemap or uses the provided URL list
 2. Scans each URL for accessibility issues using Pa11y
 3. Compares issues between base and current branches
 4. Updates PR with detailed comparison

@@ -10,6 +10,14 @@ describe("commentIssues", () => {
     expect(upsertComment).toHaveBeenCalled();
   });
 
+  it("does not include ignored codes section when no ignored codes", async () => {
+    await updateComment([], []);
+
+    expect(upsertComment).toHaveBeenCalledWith(
+      expect.not.stringContaining("Ignored Codes")
+    );
+  });
+
   it("lists ignored codes", async () => {
     vi.mocked(getInputs).mockReturnValue({
       ignore: "the_ignored_code",

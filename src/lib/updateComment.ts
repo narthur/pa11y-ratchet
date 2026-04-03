@@ -35,6 +35,8 @@ function addIgnoredCodes(headIssues: Issue[]) {
     return;
   }
 
+  core.summary.addHeading("Ignored Codes", 3);
+
   const codesResolved = ignoredCodes.filter(
     (code) => !headIssues.some((issue) => issue.code === code)
   );
@@ -125,8 +127,6 @@ export default async function updateComment(
   const summaryUrl = await getSummaryUrl();
 
   core.summary.addLink("View full breakdown", summaryUrl);
-
-  core.summary.addHeading("Ignored Codes", 3);
 
   addIgnoredCodes(headIssues);
 

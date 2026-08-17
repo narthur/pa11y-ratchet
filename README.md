@@ -1,6 +1,6 @@
 # Pa11y Ratchet
 
-A GitHub Action that helps prevent the introduction of new accessibility issues. Pa11y Ratchet compares the current branch's accessibility issues against the base branch and fails if new issues are detected.
+A GitHub Action that helps prevent the introduction of new accessibility issues. Pa11y Ratchet compares the number of issues found for each Pa11y issue code against the base branch, and fails if the count for any code has gone up. Each fix you land becomes the new ceiling, so a backlog too large to clear at once can only shrink.
 
 ## Features
 
@@ -74,10 +74,15 @@ jobs:
 
 1. Retrieves URLs from your sitemap or uses the provided URL list
 2. Scans each URL for accessibility issues using Pa11y
-3. Compares issues between base and current branches
-4. Updates PR with detailed comparison
-5. Fails if new issues are detected
-6. Generates a GitHub summary report
+3. Uploads the results as an artifact keyed to the current commit SHA
+4. Downloads the base commit's artifact from a previous run of this action
+5. Updates the PR comment with a detailed comparison — which issues are new, fixed, and retained — matching on issue code, selector, and URL
+6. Fails if the head branch has more issues of any one code than the base branch. Codes listed in `ignore` are skipped
+7. Generates a GitHub summary report
+
+The pass/fail gate is a per-code count comparison, not the issue-level matching used in the PR comment: an issue that moves to a different selector or URL will not fail the build, but introducing an extra issue of an existing code will.
+
+Because the base results are read from an artifact rather than rescanned, the action must have already run on the base commit. When no base artifact is found, the action reports the current issues and passes.
 
 ## Reports
 

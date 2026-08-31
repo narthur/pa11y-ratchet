@@ -210,9 +210,11 @@ describe("main", () => {
   });
 
   it("fails if the total issues is the same, but new issues are found for a code", async () => {
+    vi.mocked(getUrls).mockResolvedValue(["https://the.url"]);
+
     vi.mocked(readCsv).mockResolvedValue([
-      { code: "the_old_code" },
-      { code: "the_code" },
+      { code: "the_old_code", url: "https://the.url" },
+      { code: "the_code", url: "https://the.url" },
     ]);
 
     vi.mocked(pa11y).mockResolvedValueOnce({
@@ -233,6 +235,208 @@ describe("main", () => {
     await main();
 
     expect(core.setFailed).toBeCalled();
+  });
+
+  it("does not fail on pre-existing issues when a PR adds a new page", async () => {
+    // Current sitemap now resolves url1 (existing) and url3 (newly added).
+    vi.mocked(getUrls).mockResolvedValue([
+      "https://example.com/url1",
+      "https://example.com/url3",
+    ]);
+
+    // Base run only ever saw url1, with one pre-existing "the_code" issue.
+    vi.mocked(readCsv).mockResolvedValue([
+      { code: "the_code", url: "https://example.com/url1" },
+    ]);
+
+    // Head run's sitemap now also includes url3 (a newly added page), and
+    // that new page carries its own "the_code" issues. Raw per-code totals
+    // (1 base vs. 2 head) would fail the PR for issues it didn't
+    // introduce; restricting the comparison to url1 (present in both
+    // runs) should not.
+    vi.mocked(pa11y).mockResolvedValueOnce({
+      issues: [
+        {
+          code: "the_code",
+          message: "the_error_message",
+          url: "https://example.com/url1",
+        },
+        {
+          code: "the_code",
+          message: "the_error_message",
+          url: "https://example.com/url3",
+        },
+      ],
+    } as any);
+
+    await main();
+
+    expect(core.setFailed).not.toBeCalled();
+  });
+
+  it("catches a regression on a page still present when a PR removes other pages", async () => {
+    // Current sitemap only lists url1 -- url2 has been removed from the
+    // site since the base run.
+    vi.mocked(getUrls).mockResolvedValue(["https://example.com/url1"]);
+
+    // Base run saw both url1 (1 issue) and url2 (5 issues) of "the_code".
+    vi.mocked(readCsv).mockResolvedValue([
+      { code: "the_code", url: "https://example.com/url1" },
+      { code: "the_code", url: "https://example.com/url2" },
+      { code: "the_code", url: "https://example.com/url2" },
+      { code: "the_code", url: "https://example.com/url2" },
+      { code: "the_code", url: "https://example.com/url2" },
+      { code: "the_code", url: "https://example.com/url2" },
+    ]);
+
+    // Head run only scans url1, which has regressed from 1 to 2 issues.
+    // Raw totals (2 head vs. 6 base) would mask this regression because
+    // url2 dropping out lowers the head total; restricting the
+    // comparison to url1 (present in both runs) should still catch it.
+    vi.mocked(pa11y).mockResolvedValueOnce({
+      issues: [
+        {
+          code: "the_code",
+          message: "the_error_message",
+          url: "https://example.com/url1",
+        },
+        {
+          code: "the_code",
+          message: "the_error_message",
+          url: "https://example.com/url1",
+        },
+      ],
+    } as any);
+
+    await main();
+
+    expect(core.setFailed).toBeCalled();
+  });
+
+  it("logs how many URLs were excluded when the URL set changes between runs", async () => {
+    vi.mocked(getUrls).mockResolvedValue(["https://example.com/url1"]);
+
+    vi.mocked(readCsv).mockResolvedValue([
+      { code: "the_code", url: "https://example.com/url1" },
+      { code: "the_code", url: "https://example.com/url2" },
+    ]);
+
+    vi.mocked(pa11y).mockResolvedValueOnce({
+      issues: [
+        {
+          code: "the_code",
+          message: "the_error_message",
+          url: "https://example.com/url1",
+        },
+      ],
+    } as any);
+
+    await main();
+
+    expect(core.info).toBeCalledWith(
+      expect.stringContaining("1 URL(s) from the base run are no longer present")
+    );
+  });
+
+  it("does not log an excluded-URL count when the URL set is unchanged", async () => {
+    vi.mocked(getUrls).mockResolvedValue(["https://example.com/url1"]);
+
+    vi.mocked(readCsv).mockResolvedValue([
+      { code: "the_code", url: "https://example.com/url1" },
+    ]);
+
+    vi.mocked(pa11y).mockResolvedValueOnce({
+      issues: [
+        {
+          code: "the_code",
+          message: "the_error_message",
+          url: "https://example.com/url1",
+        },
+      ],
+    } as any);
+
+    await main();
+
+    expect(core.info).not.toBeCalled();
+  });
+
+  it("catches a regression when a code's only base occurrences were on a now-removed page", async () => {
+    // Current sitemap lists url1 -- url2 has been removed from the site.
+    vi.mocked(getUrls).mockResolvedValue(["https://example.com/url1"]);
+
+    // url1 already had a base issue (a different code), so it's verifiably
+    // common to both runs -- not merely "no base data for it", which would
+    // be the unresolvable added-vs-previously-clean ambiguity this fix
+    // deliberately doesn't try to solve. "the_code"'s only base occurrence
+    // was on url2, now gone.
+    vi.mocked(readCsv).mockResolvedValue([
+      { code: "other_code", url: "https://example.com/url1" },
+      { code: "the_code", url: "https://example.com/url2" },
+    ]);
+
+    // Head run finds a fresh "the_code" issue on url1, a page confirmed
+    // common to both runs. baseCountForCode for "the_code" (1) is nonzero,
+    // so this exercises the restricted-comparison branch, not the
+    // zero-base-count fallback -- and within that branch,
+    // comparableBaseCount is 0 because the only base occurrence of
+    // "the_code" sits outside commonUrls. That must still register as a
+    // regression, not be treated as "no data to compare".
+    vi.mocked(pa11y).mockResolvedValueOnce({
+      issues: [
+        {
+          code: "the_code",
+          message: "the_error_message",
+          url: "https://example.com/url1",
+        },
+      ],
+    } as any);
+
+    await main();
+
+    expect(core.setFailed).toBeCalled();
+  });
+
+  it("does not fail when a common page goes fully clean and an unrelated common page has an unchanged issue count", async () => {
+    // Both url1 and url2 are scanned in both runs.
+    vi.mocked(getUrls).mockResolvedValue([
+      "https://example.com/url1",
+      "https://example.com/url2",
+    ]);
+
+    // Base: url1 has 1 "the_code" issue; url2 has 1 "other_code" issue
+    // (present only so url2 is verifiably common, per the same reasoning
+    // as the test above).
+    vi.mocked(readCsv).mockResolvedValue([
+      { code: "the_code", url: "https://example.com/url1" },
+      { code: "other_code", url: "https://example.com/url2" },
+    ]);
+
+    // Head: url1 is now fully clean (0 issues of any code) -- pinning the
+    // fix from `headUrls = new Set(headIssues...)` to
+    // `headUrls = new Set(urls)`. Under the old, issue-derived headUrls, a
+    // page with zero head issues produces no head issue record at all, so
+    // it would silently drop out of commonUrls even though it was
+    // genuinely scanned -- taking its base "the_code" occurrence with it.
+    // That would leave comparableBaseCount("the_code") at 0 while url2's
+    // fresh "the_code" occurrence (below) still counts, wrongly failing
+    // the PR even though the total "the_code" count is unchanged (1 base,
+    // 1 head). With url1 correctly retained in commonUrls, both totals
+    // stay at 1 and the PR should not fail.
+    vi.mocked(pa11y)
+      .mockResolvedValueOnce({ issues: [] } as any)
+      .mockResolvedValueOnce({
+        issues: [
+          {
+            code: "the_code",
+            message: "the_error_message",
+            url: "https://example.com/url2",
+          },
+        ],
+      } as any);
+
+    await main();
+
+    expect(core.setFailed).not.toBeCalled();
   });
 
   it("fails immediately if pa11y returns an error issue, without comparing to base", async () => {

@@ -24,4 +24,5 @@ export default {
   setFailed: vi.fn(),
   setOutput: vi.fn(),
   warning: vi.fn(),
+  info: vi.fn(),
 };

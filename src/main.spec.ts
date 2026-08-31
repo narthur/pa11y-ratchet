@@ -211,8 +211,8 @@ describe("main", () => {
 
   it("fails if the total issues is the same, but new issues are found for a code", async () => {
     vi.mocked(readCsv).mockResolvedValue([
-      { code: "the_old_code" },
-      { code: "the_code" },
+      { code: "the_old_code", url: "https://the.url" },
+      { code: "the_code", url: "https://the.url" },
     ]);
 
     vi.mocked(pa11y).mockResolvedValueOnce({
@@ -226,6 +226,76 @@ describe("main", () => {
           message: "the_error_message",
           url: "https://the.url",
           code: "the_code",
+        },
+      ],
+    } as any);
+
+    await main();
+
+    expect(core.setFailed).toBeCalled();
+  });
+
+  it("does not fail on pre-existing issues when a PR adds a new page", async () => {
+    // Base run only ever saw url1, with one pre-existing "the_code" issue.
+    vi.mocked(readCsv).mockResolvedValue([
+      { code: "the_code", url: "https://example.com/url1" },
+    ]);
+
+    // Head run's sitemap now also includes url3 (a newly added page), and
+    // that new page carries its own "the_code" issues. Raw per-code totals
+    // (1 base vs. 2 head) would fail the PR for issues it didn't
+    // introduce; restricting the comparison to url1 (present in both
+    // runs) should not.
+    vi.mocked(pa11y).mockResolvedValueOnce({
+      issues: [
+        {
+          code: "the_code",
+          message: "the_error_message",
+          url: "https://example.com/url1",
+        },
+        {
+          code: "the_code",
+          message: "the_error_message",
+          url: "https://example.com/url3",
+        },
+      ],
+    } as any);
+
+    await main();
+
+    expect(core.setFailed).not.toBeCalled();
+  });
+
+  it("catches a regression on a page still present when a PR removes other pages", async () => {
+    // Current sitemap only lists url1 -- url2 has been removed from the
+    // site since the base run.
+    vi.mocked(getUrls).mockResolvedValue(["https://example.com/url1"]);
+
+    // Base run saw both url1 (1 issue) and url2 (5 issues) of "the_code".
+    vi.mocked(readCsv).mockResolvedValue([
+      { code: "the_code", url: "https://example.com/url1" },
+      { code: "the_code", url: "https://example.com/url2" },
+      { code: "the_code", url: "https://example.com/url2" },
+      { code: "the_code", url: "https://example.com/url2" },
+      { code: "the_code", url: "https://example.com/url2" },
+      { code: "the_code", url: "https://example.com/url2" },
+    ]);
+
+    // Head run only scans url1, which has regressed from 1 to 2 issues.
+    // Raw totals (2 head vs. 6 base) would mask this regression because
+    // url2 dropping out lowers the head total; restricting the
+    // comparison to url1 (present in both runs) should still catch it.
+    vi.mocked(pa11y).mockResolvedValueOnce({
+      issues: [
+        {
+          code: "the_code",
+          message: "the_error_message",
+          url: "https://example.com/url1",
+        },
+        {
+          code: "the_code",
+          message: "the_error_message",
+          url: "https://example.com/url1",
         },
       ],
     } as any);

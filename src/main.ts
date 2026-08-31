@@ -93,15 +93,59 @@ export default async function main() {
 
   console.log("codes", codes);
 
+  // Base counts come from a stored artifact of the base SHA, while head
+  // URLs come from the *current* sitemap. Nothing guarantees the two runs
+  // covered the same URLs: a PR that adds pages would raise head's raw
+  // totals and could fail on issues it didn't introduce, and a PR that
+  // removes pages would lower head's raw totals and could mask a genuine
+  // regression on a page that's still there. Restrict the comparison to
+  // URLs seen in both runs so drift in the URL set doesn't produce a
+  // false pass or fail.
+  const baseUrls = new Set(baseIssues.map((issue) => issue.url));
+  const headUrls = new Set(headIssues.map((issue) => issue.url));
+  const commonUrls = new Set(
+    [...baseUrls].filter((url) => headUrls.has(url))
+  );
+  const addedUrls = [...headUrls].filter((url) => !baseUrls.has(url));
+  const removedUrls = [...baseUrls].filter((url) => !headUrls.has(url));
+
+  if (addedUrls.length > 0 || removedUrls.length > 0) {
+    core.info(
+      `Comparing issues on the ${commonUrls.size} URL(s) common to both ` +
+        `the base and head runs. ${addedUrls.length} URL(s) are new in ` +
+        `this run and ${removedUrls.length} URL(s) from the base run are ` +
+        `no longer present; issues on those URLs were excluded from the ` +
+        `pass/fail comparison.`
+    );
+  }
+
   codes.forEach(async (code) => {
     if (ignoredCodes.includes(code)) {
       return;
     }
 
-    if (
-      headIssues.filter((v) => v.code === code).length >
-      baseIssues.filter((v) => v.code === code).length
-    ) {
+    const baseCountForCode = baseIssues.filter((v) => v.code === code).length;
+
+    // A code with zero occurrences anywhere in the base run has nothing
+    // for URL-set drift to dilute -- any occurrence in head is a genuine
+    // regression, so compare raw totals rather than restricting to common
+    // URLs. This also keeps a fully clean baseline (no base issues at
+    // all) catching every new issue, exactly as before this change.
+    if (baseCountForCode === 0) {
+      if (headIssues.some((v) => v.code === code)) {
+        core.setFailed(`New ${code} issues detected`);
+      }
+      return;
+    }
+
+    const comparableBaseCount = baseIssues.filter(
+      (v) => v.code === code && commonUrls.has(v.url)
+    ).length;
+    const comparableHeadCount = headIssues.filter(
+      (v) => v.code === code && commonUrls.has(v.url)
+    ).length;
+
+    if (comparableHeadCount > comparableBaseCount) {
       core.setFailed(`New ${code} issues detected`);
     }
   });

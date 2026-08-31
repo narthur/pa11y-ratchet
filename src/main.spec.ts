@@ -329,4 +329,73 @@ describe("main", () => {
 
     expect(core.warning).not.toBeCalled();
   });
+
+  it("warns only about the unmatched entry in a mixed ignore list", async () => {
+    vi.mocked(readCsv).mockResolvedValue([]);
+
+    vi.mocked(getInputs).mockReturnValue({
+      ignore: "the_ignored_code,WCAG2AA.Principle1.Guideline1_4.1_4_3.G18.Fail",
+      sitemapUrl: "the_sitemap-url",
+      find: "the_find",
+      replace: "the_replace",
+      include: "2$",
+      configPath: "",
+    } as any);
+
+    vi.mocked(pa11y).mockResolvedValue({
+      issues: [
+        {
+          code: "the_ignored_code",
+          message: "the_error_message",
+          url: "https://the.url",
+        },
+      ],
+    } as any);
+
+    await main();
+
+    expect(core.warning).toBeCalledTimes(1);
+    expect(core.warning).toBeCalledWith(
+      expect.stringContaining(
+        "WCAG2AA.Principle1.Guideline1_4.1_4_3.G18.Fail"
+      )
+    );
+    expect(core.warning).not.toBeCalledWith(
+      expect.stringContaining("the_ignored_code")
+    );
+  });
+
+  it("warns about an unmatched ignore code even when no base artifact is found", async () => {
+    // Regression check: the warning used to sit after the `if (!baseIssues)
+    // return` early exit, so it silently never fired on a PR's first run --
+    // exactly when someone is most likely to be newly wiring up `ignore`.
+    vi.mocked(findArtifact).mockResolvedValue(undefined);
+
+    vi.mocked(getInputs).mockReturnValue({
+      ignore: "WCAG2AA.Principle1.Guideline1_4.1_4_3.G18.Fail",
+      sitemapUrl: "the_sitemap-url",
+      find: "the_find",
+      replace: "the_replace",
+      include: "2$",
+      configPath: "",
+    } as any);
+
+    vi.mocked(pa11y).mockResolvedValue({
+      issues: [
+        {
+          code: "color-contrast",
+          message: "the_error_message",
+          url: "https://the.url",
+        },
+      ],
+    } as any);
+
+    await main();
+
+    expect(core.warning).toBeCalledWith(
+      expect.stringContaining(
+        "WCAG2AA.Principle1.Guideline1_4.1_4_3.G18.Fail"
+      )
+    );
+  });
 });

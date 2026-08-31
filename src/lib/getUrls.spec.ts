@@ -68,4 +68,83 @@ describe("getUrls", () => {
       /Failed to parse sitemap/
     );
   });
+
+  it("reports an honest error for an empty response body (xml2js parses this to null, not a thrown error)", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce((await textResponse(``)) as any);
+
+    await expect(getUrls("https://example.com/sitemap.xml")).rejects.toThrow(
+      /not a <urlset> or <sitemapindex>/
+    );
+  });
+
+  it("returns an empty list for an empty urlset rather than an 'unexpected shape' error", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      (await textResponse(`<urlset></urlset>`)) as any
+    );
+
+    const urls = await getUrls("https://example.com/sitemap.xml");
+
+    expect(urls).toEqual([]);
+  });
+
+  it("returns an empty list for an empty sitemap index", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      (await textResponse(`<sitemapindex></sitemapindex>`)) as any
+    );
+
+    const urls = await getUrls("https://example.com/sitemap.xml");
+
+    expect(urls).toEqual([]);
+  });
+
+  it("follows a sitemap index nested more than one level deep", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(
+        (await textResponse(
+          `<sitemapindex><sitemap><loc>https://example.com/sitemap-inner.xml</loc></sitemap></sitemapindex>`
+        )) as any
+      )
+      .mockResolvedValueOnce(
+        (await textResponse(
+          `<sitemapindex><sitemap><loc>https://example.com/sitemap-leaf.xml</loc></sitemap></sitemapindex>`
+        )) as any
+      )
+      .mockResolvedValueOnce(
+        (await textResponse(
+          `<urlset><url><loc>https://example.com/leaf</loc></url></urlset>`
+        )) as any
+      );
+
+    const urls = await getUrls("https://example.com/sitemap.xml");
+
+    expect(urls).toEqual(["https://example.com/leaf"]);
+  });
+
+  it("throws a clear error instead of recursing forever on a sitemap index that references itself", async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      (await textResponse(
+        `<sitemapindex><sitemap><loc>https://example.com/sitemap.xml</loc></sitemap></sitemapindex>`
+      )) as any
+    );
+
+    await expect(getUrls("https://example.com/sitemap.xml")).rejects.toThrow(
+      /Circular sitemap index detected/
+    );
+  });
+
+  it("rejects with a sitemap-URL-labeled error when a child sitemap in an index fails to fetch or parse", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(
+        (await textResponse(
+          `<sitemapindex><sitemap><loc>https://example.com/sitemap-broken.xml</loc></sitemap></sitemapindex>`
+        )) as any
+      )
+      .mockResolvedValueOnce(
+        (await textResponse(`<urlset><url><loc>unclosed`)) as any
+      );
+
+    await expect(getUrls("https://example.com/sitemap.xml")).rejects.toThrow(
+      /Failed to parse sitemap.*sitemap-broken\.xml/s
+    );
+  });
 });

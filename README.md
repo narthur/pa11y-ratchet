@@ -32,14 +32,14 @@ jobs:
 ## Inputs
 
 | Name | Description | Required | Default |
-|------|-------------|----------|---------|
+| ------ | ------------- | ---------- | --------- |
 | `sitemap-url` | URL of the sitemap to scan. Accepts a `<urlset>` sitemap or a `<sitemapindex>`, in which case all child sitemaps are fetched and combined | No* | - |
 | `urls` | Newline-separated list of URLs to scan | No* | - |
 | `github-token` | GitHub token for PR comments | Yes | - |
 | `find` | URL substring to search for | No | - |
 | `replace` | Replacement for found substring | No | - |
 | `include` | Regex pattern to filter URLs | No | - |
-| `ignore` | Comma-separated list of issue codes to ignore | No | - |
+| `ignore` | Comma-separated list of issue codes to ignore. Must match the configured runner's code format -- see note below | No | - |
 | `config-path` | Path to Pa11y configuration file | No | - |
 
 \* Either `sitemap-url` or `urls` must be provided.

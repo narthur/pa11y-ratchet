@@ -41,6 +41,8 @@ export default async function main() {
     throw new Error("Either sitemap-url or urls input must be provided");
   }
 
+  console.log(`Resolved ${rawUrls.length} URL(s) before filtering`);
+
   const urls = rawUrls
     .filter((url: string) => includeRegex.test(url))
     .map((url: string) => url.replace(inputs.find, inputs.replace));
@@ -58,16 +60,13 @@ export default async function main() {
   await updateComment(baseIssues, headIssues);
   await updateSummary(headIssues);
 
-  if (!baseIssues) {
-    return;
-  }
-  const codes = getCodes([...baseIssues, ...headIssues]);
-
-  console.log("basecodes", baseIssues, "headcodes", headIssues);
-
-  console.log("codes", codes);
-
   const ignoredCodes = getIgnoredCodes();
+
+  // Codes seen so far for this PR: the current scan plus the base branch's
+  // last recorded scan, when one exists. Computed even with no base
+  // artifact (e.g. the very first run on a PR) so the check below isn't
+  // itself a silent no-op on that path.
+  const codes = getCodes([...(baseIssues ?? []), ...headIssues]);
 
   // `ignore` codes are runner-specific (htmlcs vs. axe). An entry that
   // matches none of the codes seen in this scan is almost always a
@@ -85,6 +84,14 @@ export default async function main() {
         `"WCAG2AA.Principle1.Guideline1_4.1_4_3.G18.Fail" for htmlcs).`
     );
   });
+
+  if (!baseIssues) {
+    return;
+  }
+
+  console.log("basecodes", baseIssues, "headcodes", headIssues);
+
+  console.log("codes", codes);
 
   codes.forEach(async (code) => {
     if (ignoredCodes.includes(code)) {

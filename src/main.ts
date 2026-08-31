@@ -41,6 +41,8 @@ export default async function main() {
     throw new Error("Either sitemap-url or urls input must be provided");
   }
 
+  console.log(`Resolved ${rawUrls.length} URL(s) before filtering`);
+
   const urls = rawUrls
     .filter((url: string) => includeRegex.test(url))
     .map((url: string) => url.replace(inputs.find, inputs.replace));
@@ -58,16 +60,38 @@ export default async function main() {
   await updateComment(baseIssues, headIssues);
   await updateSummary(headIssues);
 
+  const ignoredCodes = getIgnoredCodes();
+
+  // Codes seen so far for this PR: the current scan plus the base branch's
+  // last recorded scan, when one exists. Computed even with no base
+  // artifact (e.g. the very first run on a PR) so the check below isn't
+  // itself a silent no-op on that path.
+  const codes = getCodes([...(baseIssues ?? []), ...headIssues]);
+
+  // `ignore` codes are runner-specific (htmlcs vs. axe). An entry that
+  // matches none of the codes seen in this scan is almost always a
+  // mistake -- and it fails silently in the dangerous direction, since
+  // the rule it was meant to ignore stays active. Warn so it's visible.
+  const unmatchedIgnoredCodes = ignoredCodes.filter(
+    (ignoredCode) => !codes.includes(ignoredCode)
+  );
+
+  unmatchedIgnoredCodes.forEach((code) => {
+    core.warning(
+      `ignore code "${code}" matched no issues in this scan. ` +
+        `Ignore codes must match the configured runner's code format ` +
+        `(e.g. "color-contrast" for axe, ` +
+        `"WCAG2AA.Principle1.Guideline1_4.1_4_3.G18.Fail" for htmlcs).`
+    );
+  });
+
   if (!baseIssues) {
     return;
   }
-  const codes = getCodes([...baseIssues, ...headIssues]);
 
   console.log("basecodes", baseIssues, "headcodes", headIssues);
 
   console.log("codes", codes);
-
-  const ignoredCodes = getIgnoredCodes();
 
   codes.forEach(async (code) => {
     if (ignoredCodes.includes(code)) {

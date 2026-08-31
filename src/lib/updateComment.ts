@@ -1,31 +1,75 @@
 import { Issue } from "./scanUrls.js";
 import upsertComment from "../services/github/upsertComment.js";
-import compareIssues from "./compareIssues.js";
 import core from "@actions/core";
 import getSummaryUrl from "../services/github/getSummaryUrl.js";
 import sleep from "./sleep.js";
-import { Comparison } from "./compareIssues.js";
 import { getIgnoredCodes } from "./getIgnoredCodes.js";
 import { getCodes } from "./getCodes.js";
+import {
+  getUrlIntersection,
+  getComparableCounts,
+} from "./getComparableCounts.js";
 
-function addSummary(baseIssues: Issue[] | undefined, headIssues: Issue[]) {
-  const baseLen = baseIssues?.length;
-  const headLen = headIssues.length;
-
-  if (!baseLen) {
+// Same restricted comparison the pass/fail gate uses (see
+// getComparableCounts), so the totals shown here can't disagree with
+// whether the check passed.
+function addSummary(
+  baseIssues: Issue[] | undefined,
+  headIssues: Issue[],
+  commonUrls: Set<string> | undefined
+) {
+  if (!baseIssues?.length || !commonUrls) {
     core.summary.addRaw(`<p>No baseline issues found.</p>`);
-  } else if (baseLen === headLen) {
+    core.summary.addTable([
+      ["Baseline", "Head"],
+      ["-", headIssues.length.toString()],
+    ]);
+    return;
+  }
+
+  const codes = getCodes([...baseIssues, ...headIssues]);
+  const { baseLen, headLen } = codes.reduce(
+    (totals, code) => {
+      const { baseCount, headCount } = getComparableCounts(
+        code,
+        baseIssues,
+        headIssues,
+        commonUrls
+      );
+      return {
+        baseLen: totals.baseLen + baseCount,
+        headLen: totals.headLen + headCount,
+      };
+    },
+    { baseLen: 0, headLen: 0 }
+  );
+
+  if (baseLen === headLen) {
     core.summary.addRaw(`<p>Issue count is the same as the baseline.</p>`);
   } else if (baseLen > headLen) {
     core.summary.addRaw(`<p>🎉 Issue count is less than the baseline!</p>`);
-  } else if (baseLen < headLen) {
+  } else {
     core.summary.addRaw(`<p>🚨 Issue count is greater than the baseline.</p>`);
   }
 
   core.summary.addTable([
     ["Baseline", "Head"],
-    [baseLen?.toString() ?? "-", headLen.toString()],
+    [baseLen.toString(), headLen.toString()],
   ]);
+}
+
+function addUrlDrift(addedUrls: string[], removedUrls: string[]) {
+  if (addedUrls.length === 0 && removedUrls.length === 0) {
+    return;
+  }
+
+  core.summary.addRaw(
+    `<p>The set of scanned URLs changed since the baseline: ` +
+      `${addedUrls.length} URL(s) are new and ${removedUrls.length} URL(s) ` +
+      `are no longer present. Counts above and below are restricted to ` +
+      `URLs present in both runs, so newly added or removed pages don't ` +
+      `skew the comparison.</p>`
+  );
 }
 
 function addIgnoredCodes(headIssues: Issue[]) {
@@ -56,35 +100,26 @@ function addIgnoredCodes(headIssues: Issue[]) {
   core.summary.addList(codesResolved);
 }
 
-type CodeComparison = Comparison & { code: string };
-
-function getCodeComparisons(
+// Same restricted comparison the pass/fail gate uses (see
+// getComparableCounts), so a code's Before/After counts here can't
+// disagree with whether that code failed the check.
+function addComparativeTable(
   baseIssues: Issue[],
-  headIssues: Issue[]
-): CodeComparison[] {
+  headIssues: Issue[],
+  commonUrls: Set<string>
+) {
   const codes = getCodes([...baseIssues, ...headIssues]);
-  return codes.map((code) => ({
-    code,
-    ...compareIssues({
-      baseIssues: baseIssues.filter((issue) => issue.code === code),
-      headIssues: headIssues.filter((issue) => issue.code === code),
-    }),
-  }));
-}
-
-async function addComparativeTable(baseIssues: Issue[], headIssues: Issue[]) {
-  const data = getCodeComparisons(baseIssues, headIssues);
+  const data = codes.map((code) =>
+    getComparableCounts(code, baseIssues, headIssues, commonUrls)
+  );
 
   core.summary.addTable([
     ["Code", "Before", "After", "Net Change"],
     ...data.map((d) => [
       d.code,
-      baseIssues.filter((issue) => issue.code === d.code).length.toString(),
-      headIssues.filter((issue) => issue.code === d.code).length.toString(),
-      (
-        headIssues.filter((issue) => issue.code === d.code).length -
-        baseIssues.filter((issue) => issue.code === d.code).length
-      ).toString(),
+      d.baseCount.toString(),
+      d.headCount.toString(),
+      (d.headCount - d.baseCount).toString(),
     ]),
   ]);
 }
@@ -103,7 +138,8 @@ function addHeadTable(headIssues: Issue[]) {
 
 export default async function updateComment(
   baseIssues: Issue[] | undefined,
-  headIssues: Issue[]
+  headIssues: Issue[],
+  urls: string[]
 ) {
   core.summary.emptyBuffer();
 
@@ -112,14 +148,25 @@ export default async function updateComment(
 
   core.summary.addHeading("Accessibility Issues", 2);
 
+  // Restricted to the same base/head URL intersection the pass/fail gate
+  // uses, so the comment can never disagree with whether the check
+  // passed. See getComparableCounts for the rule.
+  const urlIntersection = baseIssues
+    ? getUrlIntersection(baseIssues, urls)
+    : undefined;
+
   core.summary.addHeading("Summary", 3);
 
-  addSummary(baseIssues, headIssues);
+  addSummary(baseIssues, headIssues, urlIntersection?.commonUrls);
+
+  if (urlIntersection) {
+    addUrlDrift(urlIntersection.addedUrls, urlIntersection.removedUrls);
+  }
 
   core.summary.addHeading("Issue Breakdown", 3);
 
-  if (baseIssues) {
-    addComparativeTable(baseIssues, headIssues);
+  if (baseIssues && urlIntersection) {
+    addComparativeTable(baseIssues, headIssues, urlIntersection.commonUrls);
   } else {
     addHeadTable(headIssues);
   }

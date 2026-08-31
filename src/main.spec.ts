@@ -274,6 +274,47 @@ describe("main", () => {
     expect(core.setFailed).not.toBeCalled();
   });
 
+  it("keeps the PR comment's verdict consistent with the gate when a PR adds a new page", async () => {
+    // Same drift as the previous test (url3 is newly added, url1 is
+    // common to both runs), but this pins the comment path rather than
+    // just the gate: updateComment() historically built its summary from
+    // raw, unrestricted totals, so it would say the issue count rose
+    // (2 head vs. 1 base) even on a run where the gate above does not
+    // fail. A reader trusts the comment, not the invisible gate logic --
+    // the two must never disagree.
+    vi.mocked(getUrls).mockResolvedValue([
+      "https://example.com/url1",
+      "https://example.com/url3",
+    ]);
+
+    vi.mocked(readCsv).mockResolvedValue([
+      { code: "the_code", url: "https://example.com/url1" },
+    ]);
+
+    vi.mocked(pa11y).mockResolvedValueOnce({
+      issues: [
+        {
+          code: "the_code",
+          message: "the_error_message",
+          url: "https://example.com/url1",
+        },
+        {
+          code: "the_code",
+          message: "the_error_message",
+          url: "https://example.com/url3",
+        },
+      ],
+    } as any);
+
+    await main();
+
+    expect(core.setFailed).not.toBeCalled();
+
+    const commentBody = vi.mocked(upsertComment).mock.calls[0][0];
+    expect(commentBody).not.toContain("greater than the baseline");
+    expect(commentBody).toContain("Issue count is the same as the baseline");
+  });
+
   it("catches a regression on a page still present when a PR removes other pages", async () => {
     // Current sitemap only lists url1 -- url2 has been removed from the
     // site since the base run.

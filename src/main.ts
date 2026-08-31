@@ -10,6 +10,7 @@ import uploadIssues from "./lib/uploadIssues.js";
 import retrieveIssues from "./lib/retrieveIssues.js";
 import updateSummary from "./lib/updateSummary.js";
 import { getIgnoredCodes } from "./lib/getIgnoredCodes.js";
+import { getUrlIntersection, getComparableCounts } from "./lib/getComparableCounts.js";
 
 export default async function main() {
   const pr = await findPr();
@@ -57,7 +58,7 @@ export default async function main() {
 
   const baseIssues = await retrieveIssues(baseSha);
 
-  await updateComment(baseIssues, headIssues);
+  await updateComment(baseIssues, headIssues, urls);
   await updateSummary(headIssues);
 
   const ignoredCodes = getIgnoredCodes();
@@ -102,21 +103,11 @@ export default async function main() {
   // URLs seen in both runs so drift in the URL set doesn't produce a
   // false pass or fail -- except for a code with zero occurrences in the
   // base run, which always compares on raw totals regardless of URL
-  // overlap (see the comment further down).
-  //
-  // The base side can only be derived from base's stored issue records --
-  // a URL scanned-and-clean in that run leaves no record, so it's
-  // indistinguishable from a URL that wasn't scanned at all. The head
-  // side doesn't have that limitation: `urls` is every URL this run
-  // actually scanned, so use it rather than headIssues, or a common page
-  // that's now clean in head would wrongly look absent from head too.
-  const baseUrls = new Set(baseIssues.map((issue) => issue.url));
-  const headUrls = new Set(urls);
-  const commonUrls = new Set(
-    [...baseUrls].filter((url) => headUrls.has(url))
+  // overlap (see getComparableCounts).
+  const { commonUrls, addedUrls, removedUrls } = getUrlIntersection(
+    baseIssues,
+    urls
   );
-  const addedUrls = [...headUrls].filter((url) => !baseUrls.has(url));
-  const removedUrls = [...baseUrls].filter((url) => !headUrls.has(url));
 
   if (addedUrls.length > 0 || removedUrls.length > 0) {
     core.info(
@@ -134,28 +125,14 @@ export default async function main() {
       return;
     }
 
-    const baseCountForCode = baseIssues.filter((v) => v.code === code).length;
+    const { baseCount, headCount } = getComparableCounts(
+      code,
+      baseIssues,
+      headIssues,
+      commonUrls
+    );
 
-    // A code with zero occurrences anywhere in the base run has nothing
-    // for URL-set drift to dilute -- any occurrence in head is a genuine
-    // regression, so compare raw totals rather than restricting to common
-    // URLs. This also keeps a fully clean baseline (no base issues at
-    // all) catching every new issue, exactly as before this change.
-    if (baseCountForCode === 0) {
-      if (headIssues.some((v) => v.code === code)) {
-        core.setFailed(`New ${code} issues detected`);
-      }
-      return;
-    }
-
-    const comparableBaseCount = baseIssues.filter(
-      (v) => v.code === code && commonUrls.has(v.url)
-    ).length;
-    const comparableHeadCount = headIssues.filter(
-      (v) => v.code === code && commonUrls.has(v.url)
-    ).length;
-
-    if (comparableHeadCount > comparableBaseCount) {
+    if (headCount > baseCount) {
       core.setFailed(`New ${code} issues detected`);
     }
   });

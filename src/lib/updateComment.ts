@@ -6,19 +6,21 @@ import sleep from "./sleep.js";
 import { getIgnoredCodes } from "./getIgnoredCodes.js";
 import { getCodes } from "./getCodes.js";
 import {
-  getUrlIntersection,
   getComparableCounts,
+  ComparableCounts,
+  UrlIntersection,
 } from "./getComparableCounts.js";
 
-// Same restricted comparison the pass/fail gate uses (see
-// getComparableCounts), so the totals shown here can't disagree with
-// whether the check passed.
-function addSummary(
-  baseIssues: Issue[] | undefined,
-  headIssues: Issue[],
-  commonUrls: Set<string> | undefined
-) {
-  if (!baseIssues?.length || !commonUrls) {
+// `data` is this code's Before/After counts under the same restricted
+// comparison the pass/fail gate uses (see getComparableCounts). Summing
+// it here gives an aggregate total that reflects the same underlying
+// counts as the gate, but -- because the gate fails on any single
+// code's regression while this sums across all codes -- an aggregate
+// "unchanged" doesn't itself guarantee every code passed. The per-code
+// table (addComparativeTable) is what actually mirrors the gate's
+// decision one-for-one.
+function addSummary(data: ComparableCounts[] | undefined, headIssues: Issue[]) {
+  if (!data) {
     core.summary.addRaw(`<p>No baseline issues found.</p>`);
     core.summary.addTable([
       ["Baseline", "Head"],
@@ -27,20 +29,11 @@ function addSummary(
     return;
   }
 
-  const codes = getCodes([...baseIssues, ...headIssues]);
-  const { baseLen, headLen } = codes.reduce(
-    (totals, code) => {
-      const { baseCount, headCount } = getComparableCounts(
-        code,
-        baseIssues,
-        headIssues,
-        commonUrls
-      );
-      return {
-        baseLen: totals.baseLen + baseCount,
-        headLen: totals.headLen + headCount,
-      };
-    },
+  const { baseLen, headLen } = data.reduce(
+    (totals, { baseCount, headCount }) => ({
+      baseLen: totals.baseLen + baseCount,
+      headLen: totals.headLen + headCount,
+    }),
     { baseLen: 0, headLen: 0 }
   );
 
@@ -58,6 +51,10 @@ function addSummary(
   ]);
 }
 
+// Skipped when there's no real baseline to drift from (no artifact, or
+// a baseline that's a genuinely empty scan) -- otherwise every current
+// URL would be misreported as "added" just because an empty baseline
+// has no URLs on record at all.
 function addUrlDrift(addedUrls: string[], removedUrls: string[]) {
   if (addedUrls.length === 0 && removedUrls.length === 0) {
     return;
@@ -103,16 +100,7 @@ function addIgnoredCodes(headIssues: Issue[]) {
 // Same restricted comparison the pass/fail gate uses (see
 // getComparableCounts), so a code's Before/After counts here can't
 // disagree with whether that code failed the check.
-function addComparativeTable(
-  baseIssues: Issue[],
-  headIssues: Issue[],
-  commonUrls: Set<string>
-) {
-  const codes = getCodes([...baseIssues, ...headIssues]);
-  const data = codes.map((code) =>
-    getComparableCounts(code, baseIssues, headIssues, commonUrls)
-  );
-
+function addComparativeTable(data: ComparableCounts[]) {
   core.summary.addTable([
     ["Code", "Before", "After", "Net Change"],
     ...data.map((d) => [
@@ -139,7 +127,10 @@ function addHeadTable(headIssues: Issue[]) {
 export default async function updateComment(
   baseIssues: Issue[] | undefined,
   headIssues: Issue[],
-  urls: string[]
+  // Precomputed by main.ts (getUrlIntersection), not recomputed here --
+  // one computation shared by both the gate and the comment, per code
+  // and in aggregate, rather than two calls that happen to agree.
+  urlIntersection: UrlIntersection | undefined
 ) {
   core.summary.emptyBuffer();
 
@@ -148,25 +139,35 @@ export default async function updateComment(
 
   core.summary.addHeading("Accessibility Issues", 2);
 
-  // Restricted to the same base/head URL intersection the pass/fail gate
-  // uses, so the comment can never disagree with whether the check
-  // passed. See getComparableCounts for the rule.
-  const urlIntersection = baseIssues
-    ? getUrlIntersection(baseIssues, urls)
-    : undefined;
+  // Same restricted comparison the pass/fail gate uses (see
+  // getComparableCounts), computed once here and reused for both the
+  // Summary total and the per-code table below.
+  const data: ComparableCounts[] | undefined =
+    baseIssues && urlIntersection
+      ? getCodes([...baseIssues, ...headIssues]).map((code) =>
+          getComparableCounts(code, baseIssues, headIssues, urlIntersection.commonUrls)
+        )
+      : undefined;
 
   core.summary.addHeading("Summary", 3);
 
-  addSummary(baseIssues, headIssues, urlIntersection?.commonUrls);
+  // A genuinely empty baseline (base run executed, found zero issues)
+  // is treated as "no baseline" here, same as before this refactor --
+  // it's indistinguishable from "not scanned at all" once nothing was
+  // recorded to compare against.
+  addSummary(baseIssues?.length ? data : undefined, headIssues);
 
-  if (urlIntersection) {
+  // Same guard: an empty baseline carries no URL records at all, so
+  // every current URL would misleadingly read as "added" -- an artifact
+  // of having nothing to compare against, not a real drift signal.
+  if (baseIssues?.length && urlIntersection) {
     addUrlDrift(urlIntersection.addedUrls, urlIntersection.removedUrls);
   }
 
   core.summary.addHeading("Issue Breakdown", 3);
 
-  if (baseIssues && urlIntersection) {
-    addComparativeTable(baseIssues, headIssues, urlIntersection.commonUrls);
+  if (data) {
+    addComparativeTable(data);
   } else {
     addHeadTable(headIssues);
   }

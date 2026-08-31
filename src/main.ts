@@ -58,7 +58,14 @@ export default async function main() {
 
   const baseIssues = await retrieveIssues(baseSha);
 
-  await updateComment(baseIssues, headIssues, urls);
+  // Computed once and reused below for the pass/fail gate, so the gate
+  // and the comment are guaranteed to agree -- not just because they
+  // call the same function, but because they see the same result.
+  const urlIntersection = baseIssues
+    ? getUrlIntersection(baseIssues, urls)
+    : undefined;
+
+  await updateComment(baseIssues, headIssues, urlIntersection);
   await updateSummary(headIssues);
 
   const ignoredCodes = getIgnoredCodes();
@@ -86,7 +93,7 @@ export default async function main() {
     );
   });
 
-  if (!baseIssues) {
+  if (!baseIssues || !urlIntersection) {
     return;
   }
 
@@ -104,10 +111,7 @@ export default async function main() {
   // false pass or fail -- except for a code with zero occurrences in the
   // base run, which always compares on raw totals regardless of URL
   // overlap (see getComparableCounts).
-  const { commonUrls, addedUrls, removedUrls } = getUrlIntersection(
-    baseIssues,
-    urls
-  );
+  const { commonUrls, addedUrls, removedUrls } = urlIntersection;
 
   if (addedUrls.length > 0 || removedUrls.length > 0) {
     core.info(
@@ -116,7 +120,8 @@ export default async function main() {
         `this run and ${removedUrls.length} URL(s) from the base run are ` +
         `no longer present; issues on those URLs were excluded from the ` +
         `pass/fail comparison (codes with no prior occurrences in the ` +
-        `base run are still compared on raw totals -- see below).`
+        `base run are still compared on raw totals -- see ` +
+        `getComparableCounts).`
     );
   }
 

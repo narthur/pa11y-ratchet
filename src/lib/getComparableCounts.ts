@@ -42,7 +42,9 @@ export type ComparableCounts = {
  * common to both runs. A code with zero occurrences anywhere in the
  * base run has nothing for URL-set drift to dilute -- any occurrence in
  * head is a genuine regression -- so that case compares raw totals
- * instead.
+ * instead. This also keeps a fully clean baseline (no base issues at
+ * all) catching every new issue, exactly as it did before URL-set
+ * restriction existed.
  *
  * This is the rule the pass/fail gate uses; the PR comment must use the
  * exact same rule so the two can never disagree.

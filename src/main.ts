@@ -100,9 +100,18 @@ export default async function main() {
   // removes pages would lower head's raw totals and could mask a genuine
   // regression on a page that's still there. Restrict the comparison to
   // URLs seen in both runs so drift in the URL set doesn't produce a
-  // false pass or fail.
+  // false pass or fail -- except for a code with zero occurrences in the
+  // base run, which always compares on raw totals regardless of URL
+  // overlap (see the comment further down).
+  //
+  // The base side can only be derived from base's stored issue records --
+  // a URL scanned-and-clean in that run leaves no record, so it's
+  // indistinguishable from a URL that wasn't scanned at all. The head
+  // side doesn't have that limitation: `urls` is every URL this run
+  // actually scanned, so use it rather than headIssues, or a common page
+  // that's now clean in head would wrongly look absent from head too.
   const baseUrls = new Set(baseIssues.map((issue) => issue.url));
-  const headUrls = new Set(headIssues.map((issue) => issue.url));
+  const headUrls = new Set(urls);
   const commonUrls = new Set(
     [...baseUrls].filter((url) => headUrls.has(url))
   );
@@ -115,7 +124,8 @@ export default async function main() {
         `the base and head runs. ${addedUrls.length} URL(s) are new in ` +
         `this run and ${removedUrls.length} URL(s) from the base run are ` +
         `no longer present; issues on those URLs were excluded from the ` +
-        `pass/fail comparison.`
+        `pass/fail comparison (codes with no prior occurrences in the ` +
+        `base run are still compared on raw totals -- see below).`
     );
   }
 

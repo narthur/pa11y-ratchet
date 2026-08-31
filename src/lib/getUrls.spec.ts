@@ -132,6 +132,44 @@ describe("getUrls", () => {
     );
   });
 
+  it("throws a clear error on an indirect cycle (A -> B -> A), not just direct self-reference", async () => {
+    const responsesByUrl: Record<string, string> = {
+      "https://example.com/sitemap-a.xml": `<sitemapindex><sitemap><loc>https://example.com/sitemap-b.xml</loc></sitemap></sitemapindex>`,
+      "https://example.com/sitemap-b.xml": `<sitemapindex><sitemap><loc>https://example.com/sitemap-a.xml</loc></sitemap></sitemapindex>`,
+    };
+    vi.mocked(fetch).mockImplementation(
+      ((url: string) => textResponse(responsesByUrl[url])) as any
+    );
+
+    await expect(
+      getUrls("https://example.com/sitemap-a.xml")
+    ).rejects.toThrow(/Circular sitemap index detected/);
+  });
+
+  it("does not flag a diamond-shaped index (two branches referencing the same non-cyclic child) as circular", async () => {
+    const responsesByUrl: Record<string, string> = {
+      "https://example.com/sitemap.xml": `<sitemapindex>
+        <sitemap><loc>https://example.com/branch-a.xml</loc></sitemap>
+        <sitemap><loc>https://example.com/branch-b.xml</loc></sitemap>
+      </sitemapindex>`,
+      "https://example.com/branch-a.xml": `<sitemapindex><sitemap><loc>https://example.com/shared.xml</loc></sitemap></sitemapindex>`,
+      "https://example.com/branch-b.xml": `<sitemapindex><sitemap><loc>https://example.com/shared.xml</loc></sitemap></sitemapindex>`,
+      "https://example.com/shared.xml": `<urlset><url><loc>https://example.com/shared-page</loc></url></urlset>`,
+    };
+    vi.mocked(fetch).mockImplementation(
+      ((url: string) => textResponse(responsesByUrl[url])) as any
+    );
+
+    const urls = await getUrls("https://example.com/sitemap.xml");
+
+    // `shared.xml` is referenced by two branches, not by itself or an
+    // ancestor, so this is not a cycle -- both branches should resolve.
+    expect(urls).toEqual([
+      "https://example.com/shared-page",
+      "https://example.com/shared-page",
+    ]);
+  });
+
   it("rejects with a sitemap-URL-labeled error when a child sitemap in an index fails to fetch or parse", async () => {
     vi.mocked(fetch)
       .mockResolvedValueOnce(

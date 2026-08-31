@@ -17,19 +17,22 @@ type Response = UrlsetResponse & SitemapIndexResponse;
 
 export default async function getUrls(
   sitemapUrl: string,
-  // Tracks sitemap URLs already visited in this traversal, so a sitemap
-  // index that references itself (directly, or through a cycle of child
-  // sitemaps) fails fast instead of recursing forever.
-  seen: Set<string> = new Set()
+  // The chain of sitemap URLs that led here, so a sitemap index that
+  // references itself (directly, or through a cycle of child sitemaps)
+  // fails fast instead of recursing forever. This is the ancestor path,
+  // not every URL seen anywhere in the traversal -- two sibling branches
+  // are allowed to reference the same, non-cyclic child sitemap, so each
+  // recursive call gets its own copy rather than sharing one mutable set.
+  ancestors: ReadonlySet<string> = new Set()
 ): Promise<string[]> {
-  if (seen.has(sitemapUrl)) {
+  if (ancestors.has(sitemapUrl)) {
     throw new Error(
       "Circular sitemap index detected: " +
         sitemapUrl +
-        " was already visited earlier in this traversal"
+        " is its own ancestor in this traversal"
     );
   }
-  seen.add(sitemapUrl);
+  const seen = new Set(ancestors).add(sitemapUrl);
 
   let parsed: Response;
 

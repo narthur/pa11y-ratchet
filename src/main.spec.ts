@@ -396,6 +396,49 @@ describe("main", () => {
     expect(core.setFailed).toBeCalled();
   });
 
+  it("does not fail when a common page goes fully clean and an unrelated common page has an unchanged issue count", async () => {
+    // Both url1 and url2 are scanned in both runs.
+    vi.mocked(getUrls).mockResolvedValue([
+      "https://example.com/url1",
+      "https://example.com/url2",
+    ]);
+
+    // Base: url1 has 1 "the_code" issue; url2 has 1 "other_code" issue
+    // (present only so url2 is verifiably common, per the same reasoning
+    // as the test above).
+    vi.mocked(readCsv).mockResolvedValue([
+      { code: "the_code", url: "https://example.com/url1" },
+      { code: "other_code", url: "https://example.com/url2" },
+    ]);
+
+    // Head: url1 is now fully clean (0 issues of any code) -- pinning the
+    // fix from `headUrls = new Set(headIssues...)` to
+    // `headUrls = new Set(urls)`. Under the old, issue-derived headUrls, a
+    // page with zero head issues produces no head issue record at all, so
+    // it would silently drop out of commonUrls even though it was
+    // genuinely scanned -- taking its base "the_code" occurrence with it.
+    // That would leave comparableBaseCount("the_code") at 0 while url2's
+    // fresh "the_code" occurrence (below) still counts, wrongly failing
+    // the PR even though the total "the_code" count is unchanged (1 base,
+    // 1 head). With url1 correctly retained in commonUrls, both totals
+    // stay at 1 and the PR should not fail.
+    vi.mocked(pa11y)
+      .mockResolvedValueOnce({ issues: [] } as any)
+      .mockResolvedValueOnce({
+        issues: [
+          {
+            code: "the_code",
+            message: "the_error_message",
+            url: "https://example.com/url2",
+          },
+        ],
+      } as any);
+
+    await main();
+
+    expect(core.setFailed).not.toBeCalled();
+  });
+
   it("fails immediately if pa11y returns an error issue, without comparing to base", async () => {
     vi.mocked(pa11y).mockRejectedValue(new Error("the_error_message"));
 

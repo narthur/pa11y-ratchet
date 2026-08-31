@@ -69,6 +69,23 @@ export default async function main() {
 
   const ignoredCodes = getIgnoredCodes();
 
+  // `ignore` codes are runner-specific (htmlcs vs. axe). An entry that
+  // matches none of the codes seen in this scan is almost always a
+  // mistake -- and it fails silently in the dangerous direction, since
+  // the rule it was meant to ignore stays active. Warn so it's visible.
+  const unmatchedIgnoredCodes = ignoredCodes.filter(
+    (ignoredCode) => !codes.includes(ignoredCode)
+  );
+
+  unmatchedIgnoredCodes.forEach((code) => {
+    core.warning(
+      `ignore code "${code}" matched no issues in this scan. ` +
+        `Ignore codes must match the configured runner's code format ` +
+        `(e.g. "color-contrast" for axe, ` +
+        `"WCAG2AA.Principle1.Guideline1_4.1_4_3.G18.Fail" for htmlcs).`
+    );
+  });
+
   codes.forEach(async (code) => {
     if (ignoredCodes.includes(code)) {
       return;

@@ -269,4 +269,64 @@ describe("main", () => {
 
     expect(core.setFailed).not.toBeCalled();
   });
+
+  it("warns about ignore codes that match none of the scanned issues", async () => {
+    vi.mocked(readCsv).mockResolvedValue([]);
+
+    vi.mocked(getInputs).mockReturnValue({
+      // htmlcs-shaped code, but the scan below returns an axe-shaped code,
+      // so this entry should never match anything.
+      ignore: "WCAG2AA.Principle1.Guideline1_4.1_4_3.G18.Fail",
+      sitemapUrl: "the_sitemap-url",
+      find: "the_find",
+      replace: "the_replace",
+      include: "2$",
+      configPath: "",
+    } as any);
+
+    vi.mocked(pa11y).mockResolvedValue({
+      issues: [
+        {
+          code: "color-contrast",
+          message: "the_error_message",
+          url: "https://the.url",
+        },
+      ],
+    } as any);
+
+    await main();
+
+    expect(core.warning).toBeCalledWith(
+      expect.stringContaining(
+        "WCAG2AA.Principle1.Guideline1_4.1_4_3.G18.Fail"
+      )
+    );
+  });
+
+  it("does not warn about ignore codes that match a scanned issue", async () => {
+    vi.mocked(readCsv).mockResolvedValue([]);
+
+    vi.mocked(getInputs).mockReturnValue({
+      ignore: "the_ignored_code",
+      sitemapUrl: "the_sitemap-url",
+      find: "the_find",
+      replace: "the_replace",
+      include: "2$",
+      configPath: "",
+    } as any);
+
+    vi.mocked(pa11y).mockResolvedValue({
+      issues: [
+        {
+          code: "the_ignored_code",
+          message: "the_error_message",
+          url: "https://the.url",
+        },
+      ],
+    } as any);
+
+    await main();
+
+    expect(core.warning).not.toBeCalled();
+  });
 });

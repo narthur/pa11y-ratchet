@@ -33,7 +33,7 @@ jobs:
 
 | Name | Description | Required | Default |
 |------|-------------|----------|---------|
-| `sitemap-url` | URL of the sitemap to scan | No* | - |
+| `sitemap-url` | URL of the sitemap to scan. Accepts a `<urlset>` sitemap or a `<sitemapindex>`, in which case all child sitemaps are fetched and combined | No* | - |
 | `urls` | Newline-separated list of URLs to scan | No* | - |
 | `github-token` | GitHub token for PR comments | Yes | - |
 | `find` | URL substring to search for | No | - |
@@ -43,6 +43,8 @@ jobs:
 | `config-path` | Path to Pa11y configuration file | No | - |
 
 \* Either `sitemap-url` or `urls` must be provided.
+
+`ignore` codes must match the format of the runner configured in `config-path` (Pa11y's default runner is `htmlcs`). htmlcs codes look like `WCAG2AA.Principle1.Guideline1_4.1_4_3.G18.Fail`; axe codes look like `color-contrast`. An ignore entry that matches no issue in a scan produces a `::warning::` in the workflow log, since a mismatched code silently fails to ignore anything.
 
 ## Example with URL List
 

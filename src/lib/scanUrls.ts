@@ -34,6 +34,34 @@ const throttle = pThrottle({
 
 const throttledScan = throttle(pa11y);
 
+// Sitemaps and the `urls` input frequently contain raw, unencoded
+// characters (e.g. a literal space in a path segment). Fetching that
+// directly 404s, and pa11y then audits the 404 page instead of the real
+// one. `new URL(url).toString()` percent-encodes the path/query/hash
+// without touching the scheme, host, or port, and -- critically -- is a
+// no-op on a URL that's already correctly encoded, so it doesn't
+// double-encode an existing `%20` into `%2520`.
+//
+// This is only used for the actual fetch. The original `url` string is
+// still what gets stored on each issue below, so base/head comparisons
+// and the URL intersection in getComparableCounts.ts keep matching on
+// exactly the same identity they always have. That matters across the
+// version boundary too: a base run from before this fix stored raw URLs,
+// so storing the encoded form here would make every space-containing URL
+// look absent from base and report its issues as newly introduced.
+//
+// `new URL` throws on input it can't parse, and the `urls` input and the
+// find/replace rewrite are both hand-written, so that's reachable. Fall
+// back to the original string rather than letting one bad URL abort the
+// whole run -- pa11y then fails on it exactly as it did before.
+function toFetchUrl(url: string): string {
+  try {
+    return new URL(url).toString();
+  } catch {
+    return url;
+  }
+}
+
 export default async function scanUrls(urls: string[]): Promise<Issue[]> {
   const issues = [];
   const len = urls.length;
@@ -57,7 +85,10 @@ export default async function scanUrls(urls: string[]): Promise<Issue[]> {
   for (const [i, url] of urls.entries()) {
     const key = `${i + 1}/${len}: ${url}`;
     console.time(key);
-    const res = await throttledScan(url, pa11yOpts as RawPa11yOptions);
+    const res = await throttledScan(
+      toFetchUrl(url),
+      pa11yOpts as RawPa11yOptions
+    );
     const issuesForUrl = res.issues.map((issue) => ({ url, ...issue }));
     issues.push(...issuesForUrl);
     console.timeEnd(key);

@@ -10,14 +10,69 @@ describe("scanUrls", () => {
   it("uses noSandbox arg", async () => {
     await scanUrls(["https://example.com"]);
 
+    // Trailing slash: URL normalization gives a bare origin its root
+    // path. Same resource, and the issue's stored `url` keeps the
+    // original string, so nothing downstream sees the difference.
     expect(pa11y).toHaveBeenCalledWith(
-      "https://example.com",
+      "https://example.com/",
       expect.objectContaining({
         chromeLaunchConfig: expect.objectContaining({
           args: ["--no-sandbox"],
         }),
       })
     );
+  });
+
+  it("percent-encodes a raw space in the path before fetching", async () => {
+    await scanUrls(["https://example.com/authors/Adam Wolf/"]);
+
+    expect(pa11y).toHaveBeenCalledWith(
+      "https://example.com/authors/Adam%20Wolf/",
+      expect.anything()
+    );
+  });
+
+  it("does not double-encode a URL that is already percent-encoded", async () => {
+    await scanUrls(["https://example.com/authors/Adam%20Wolf/"]);
+
+    expect(pa11y).toHaveBeenCalledWith(
+      "https://example.com/authors/Adam%20Wolf/",
+      expect.anything()
+    );
+  });
+
+  it("encodes a mix of raw and already-encoded characters in one URL", async () => {
+    await scanUrls(["https://example.com/a b/c%20d/?q=x y"]);
+
+    expect(pa11y).toHaveBeenCalledWith(
+      "https://example.com/a%20b/c%20d/?q=x%20y",
+      expect.anything()
+    );
+  });
+
+  it("passes an unparseable URL through untouched instead of aborting the run", async () => {
+    await scanUrls(["not a url"]);
+
+    expect(pa11y).toHaveBeenCalledWith("not a url", expect.anything());
+  });
+
+  it("stores the original, unencoded URL on the issue so base/head comparisons keep matching on the same identity", async () => {
+    vi.mocked(pa11y).mockResolvedValueOnce({
+      issues: [
+        {
+          code: "the_code",
+          context: "",
+          message: "",
+          selector: "",
+          type: "error",
+          typeCode: 1,
+        },
+      ],
+    } as any);
+
+    const issues = await scanUrls(["https://example.com/authors/Adam Wolf/"]);
+
+    expect(issues[0].url).toEqual("https://example.com/authors/Adam Wolf/");
   });
 
   it("preserves provided chromeLaunchConfig", async () => {

@@ -75,12 +75,13 @@ jobs:
 ## How It Works
 
 1. Retrieves URLs from your sitemap or uses the provided URL list
-2. Scans each URL for accessibility issues using Pa11y
-3. Uploads the results as an artifact keyed to the current commit SHA
-4. Downloads the base commit's artifact from a previous run of this action
-5. Updates the PR comment with a detailed comparison — which issues are new, fixed, and retained — matching on issue code, selector, and URL
-6. Fails if the head branch has more issues of any one code than the base branch. Codes listed in `ignore` are skipped
-7. Generates a GitHub summary report
+2. Percent-encodes each URL before fetching it, so a path containing a raw space (or other unencoded character) resolves instead of 404ing. Already-encoded URLs are left alone. The original, unencoded URL is what gets stored and compared, so base/head matching is unaffected
+3. Scans each URL for accessibility issues using Pa11y
+4. Uploads the results as an artifact keyed to the current commit SHA
+5. Downloads the base commit's artifact from a previous run of this action
+6. Updates the PR comment with a detailed comparison — which issues are new, fixed, and retained — matching on issue code, selector, and URL
+7. Fails if the head branch has more issues of any one code than the base branch. Codes listed in `ignore` are skipped
+8. Generates a GitHub summary report
 
 The pass/fail gate is a per-code count comparison, not the issue-level matching used in the PR comment: an issue that moves to a different selector or URL will not fail the build, but introducing an extra issue of an existing code will.
 
